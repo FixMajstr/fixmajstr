@@ -1,11 +1,11 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, List
 
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
     full_name: str
     role: str
     phone: Optional[str] = None
@@ -15,6 +15,9 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     pass
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 class UserRead(UserBase):
     id: UUID
