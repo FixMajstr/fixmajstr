@@ -26,5 +26,8 @@ def get_current_user(
     return CurrentUser(
         id=user_response.user.id,
         email=user_response.user.email,
-        role=user_response.user.role,
+        role=user_response.user.user_metadata.get("role"),
+        phone=user_response.user.user_metadata.get("phone"),
+        full_name=user_response.user.user_metadata.get("full_name"),
+        avatar_url=user_response.user.user_metadata.get("avatar_url"),
     )

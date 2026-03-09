@@ -60,6 +60,14 @@ class UserService:
                 {
                     "email": request_data.email,
                     "password": request_data.password,
+                    "options": {
+                        "data": {
+                            "full_name": request_data.full_name,
+                            "role": "client",  # default role for new users later can be admin or master
+                            "phone": request_data.phone,
+                            "avatar_url": request_data.avatar_url,
+                        }
+                    },
                 }
             )
         except Exception as e:
