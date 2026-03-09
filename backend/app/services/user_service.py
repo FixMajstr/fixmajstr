@@ -1,5 +1,5 @@
-from app.schemas.schemas import CurrentUser, UserLogin
-from fastapi import HTTPException, Response, Request
+from app.schemas import CurrentUser, UserLogin
+from fastapi import HTTPException, Response
 from supabase import Client
 
 

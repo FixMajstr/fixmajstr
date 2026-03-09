@@ -1,4 +1,4 @@
-from app.schemas.schemas import CurrentUser
+from app.schemas import CurrentUser
 from fastapi import APIRouter, Depends
 from app.schemas.test import HelloResponse
 from app.services.test_service import TestService

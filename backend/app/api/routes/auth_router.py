@@ -1,6 +1,6 @@
 from app.dependencies.auth import get_current_user
 from fastapi import APIRouter, Response, Header, Depends
-from app.schemas.schemas import (
+from app.schemas import (
     AuthResponse,
     CurrentUser,
     ErrorResponse,

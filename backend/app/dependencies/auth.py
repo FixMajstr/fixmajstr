@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.dependencies.supabase import get_supabase_client
-from app.schemas.schemas import CurrentUser
+from app.schemas import CurrentUser
 
 security = HTTPBearer()
 
