@@ -15,6 +15,9 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     pass
 
+class UserLogin(BaseModel):
+    email: str
+      
 class UserRegister(UserCreate):
     password: str
 
