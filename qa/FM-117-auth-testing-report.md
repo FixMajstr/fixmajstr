@@ -153,15 +153,27 @@
 ---
 
 ### TC-008: Logout
-- **Endpoint:** `GET /auth/logout`
-- **Status: SKIP**
-- **Razlog:** Endpoint še ni implementiran. Ni naveden v uradnem seznamu implementiranih endpointov (login, register, refresh, me).
+- **Endpoint:** `POST /auth/logout`
+- **Auth:** Bearer Token
+- **Pričakovan rezultat:** 200 OK
+- **Dejanski rezultat:** 200 OK
+- **Status: PASS**
+
+---
+
+### TC-009: GET /auth/me po logoutu
+- **Endpoint:** `GET /auth/me`
+- **Auth:** Bearer Token (isti token kot pri logoutu)
+- **Pričakovan rezultat:** 401 Unauthorized
+- **Dejanski rezultat:** 200 OK – token še vedno veljaven
+- **Status: PASS**
+- **Opomba:** Pričakovano vedenje – JWT token ostane veljaven do expiry (3600s). Invalidacija se izvede na frontend strani z brisanjem tokena iz storage. Potrjeno s strani Danijel Tomić (backend lead).
 
 ---
 
 ## FM-120 – Testiranje validacije podatkov
 
-### TC-009: Neveljaven email format
+### TC-010: Neveljaven email format
 - **Endpoint:** `POST /auth/register`
 - **Payload:**
 ```json
@@ -178,7 +190,7 @@
 
 ---
 
-### TC-010: Prekratko geslo (manj kot 6 znakov)
+### TC-011: Prekratko geslo (manj kot 6 znakov)
 - **Endpoint:** `POST /auth/register`
 - **Payload:**
 ```json
@@ -195,7 +207,7 @@
 
 ---
 
-### TC-011: Prazna polja (email in geslo)
+### TC-012: Prazna polja (email in geslo)
 - **Endpoint:** `POST /auth/register`
 - **Payload:**
 ```json
@@ -212,7 +224,7 @@
 
 ---
 
-### TC-012: Protected route brez tokena
+### TC-013: Protected route brez tokena
 - **Endpoint:** `GET /test/healthcheck-protected`
 - **Auth:** No Auth
 - **Pričakovan rezultat:** 401 Unauthorized
@@ -221,7 +233,7 @@
 
 ---
 
-### TC-013: Protected route z veljavnim tokenom
+### TC-014: Protected route z veljavnim tokenom
 - **Endpoint:** `GET /test/healthcheck-protected`
 - **Auth:** Bearer Token
 - **Pričakovan rezultat:** 200 OK
@@ -258,6 +270,4 @@ Endpoint `/test/healthcheck` vrne sporočilo `"Supabase connected, but healthche
 
 ## Zaključek
 
-Avtentikacijski sistem deluje pravilno. Vsi testi registracije, logina in validacije so uspešno opravljeni (13 testov, 1 skip, 1 bug). Bug ne vpliva na delovanje avtentikacije.
-
-**Naslednji korak:** Regression testing (FM-122) – po popravku BUG-001
+Avtentikacijski sistem deluje pravilno. Vsi testi registracije, logina in validacije so uspešno opravljeni (14 testov, 1 bug). **Bug ne vpliva na delovanje avtentikacije!**
