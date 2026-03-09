@@ -1,13 +1,7 @@
-from app.integrations.supabase import supabase
+from app.dependencies.supabase import supabase
 
 
 class TestRepository:
     def get_healthcheck(self):
-        result = (
-            supabase
-            .table("healthcheck")
-            .select("message")
-            .limit(1)
-            .execute()
-        )
-        return result.data
+        result = supabase.table("healthcheck").select("message").limit(1).execute()
+        return result.data[0] if result.data else None

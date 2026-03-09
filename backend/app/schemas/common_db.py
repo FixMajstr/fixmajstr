@@ -1,32 +1,15 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
+from .common_io import UserBase
 
-
-class UserBase(BaseModel):
-    email: str
-    full_name: str
-    role: str
-    phone: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    pass
-
-class UserLogin(BaseModel):
-    email: str
-      
-class UserRegister(UserCreate):
-    password: str
 
 class UserRead(UserBase):
     id: UUID
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class CategoryBase(BaseModel):
@@ -77,7 +60,6 @@ class MasterWithRelations(MasterRead):
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class InquiryBase(BaseModel):
     client_id: UUID
     master_id: UUID
@@ -99,7 +81,6 @@ class InquiryRead(InquiryBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class RatingBase(BaseModel):

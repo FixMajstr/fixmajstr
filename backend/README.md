@@ -14,7 +14,7 @@ del aplikacije svojo odgovornost.
     │   ├── router.py
     │   └── routes/
     ├── core/
-    ├── integrations/
+    ├── dependencies/
     ├── repositories/
     ├── schemas/
     ├── services/
@@ -74,9 +74,9 @@ Vsak router predstavlja en modul aplikacije.
 Primer:
 
     routes/
-    ├── test.py
-    ├── users.py
-    ├── jobs.py
+    ├── test_router.py
+    ├── users_router.py
+    ├── jobs_router.py
 
 Primer `test.py`:
 
@@ -128,9 +128,7 @@ settings = Settings()
 
 ---
 
-## /app/integrations
-
-Integracije z zunanjimi storitvami.
+## /app/dependencies
 
 ### supabase.py
 
@@ -152,7 +150,7 @@ Repository layer skrbi za dostop do baze.
 Primer:
 
 ```python
-from app.integrations.supabase import supabase
+from app.dependencies.supabase import supabase
 
 class TestRepository:
     def get_healthcheck(self):
@@ -307,6 +305,168 @@ Na koncu API vrne:
     {
       "message": "Hello, World!"
     }
+
+---
+
+# Protected routes (avtentikacija)
+
+## Kako deluje zaščita endpointa
+
+Za preverjanje uporabnika uporabljamo dependency `get_current_user`.
+
+### Flow
+
+```
+Request
+   ↓
+Authorization header
+   ↓
+get_current_user dependency
+   ↓
+Supabase preveri access token
+   ↓
+Route dobi current_user
+```
+
+Če je token:
+
+- **veljaven** → route se izvede
+- **neveljaven ali manjka** → API vrne **401 Unauthorized**
+
+---
+
+# get_current_user dependency
+
+Ta funkcija preveri access token in vrne trenutnega uporabnika.
+
+```python
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.dependencies.supabase import get_supabase
+from app.schemas.schemas import CurrentUser
+
+security = HTTPBearer()
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    supabase=Depends(get_supabase),
+) -> CurrentUser:
+
+    token = credentials.credentials
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing access token")
+
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired access token")
+
+    if not user_response or not user_response.user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return CurrentUser(
+        id=user_response.user.id,
+        email=user_response.user.email,
+        role=user_response.user.role,
+    )
+```
+
+---
+
+# Primer protected route
+
+Protected route uporablja `Depends(get_current_user)`.
+
+```python
+from fastapi import APIRouter, Depends
+from app.schemas.schemas import CurrentUser
+from app.dependencies.auth import get_current_user
+
+users_router = APIRouter(prefix="/users", tags=["Users"])
+
+@users_router.get("/me")
+def get_me(current_user: CurrentUser = Depends(get_current_user)):
+    return current_user
+```
+
+Če request nima veljavnega tokena, endpoint vrne:
+
+```
+401 Unauthorized
+```
+
+---
+
+# Primer requesta
+
+```
+GET /users/me
+```
+
+Header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Response:
+
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "role": "user"
+}
+```
+
+---
+
+# Kako protected route deluje v strukturi projekta
+
+Protected route še vedno sledi isti arhitekturi:
+
+```
+Route -> Service -> Repository -> Database
+```
+
+Primer:
+
+```
+Route (/users/me)
+    ↓
+get_current_user dependency
+    ↓
+Service
+    ↓
+Repository
+    ↓
+Database
+```
+
+Dependency samo **preveri uporabnika**, preden se izvede business logika.
+
+---
+
+# Povzetek
+
+Protected route uporablja:
+
+```
+Depends(get_current_user)
+```
+
+Uporabnik mora poslati:
+
+```
+Authorization: Bearer <access_token>
+```
+
+Če token ni veljaven:
+
+```
+401 Unauthorized
+```
 
 ---
 
