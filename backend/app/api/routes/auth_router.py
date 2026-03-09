@@ -96,7 +96,7 @@ class AuthRouter:
     ) -> RefreshResponse:
         return self.service.refresh_access_token(refresh_token, response)
 
-    def logout(self, response: Response) -> LogoutResponse:
+    def logout(self, response: Response) -> MessageResponse:
         return self.service.logout_user(response)
 
     def me(
