@@ -4,6 +4,10 @@ from datetime import datetime
 from typing import Optional, List
 
 
+class ErrorResponse(BaseModel):
+    detail: str
+
+
 class UserBase(BaseModel):
     email: str
     full_name: str
@@ -15,18 +19,21 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     pass
 
+
 class UserLogin(BaseModel):
     email: str
-      
+    password: str
+
+
 class UserRegister(UserCreate):
     password: str
+
 
 class UserRead(UserBase):
     id: UUID
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class CategoryBase(BaseModel):
@@ -77,7 +84,6 @@ class MasterWithRelations(MasterRead):
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class InquiryBase(BaseModel):
     client_id: UUID
     master_id: UUID
@@ -101,7 +107,6 @@ class InquiryRead(InquiryBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class RatingBase(BaseModel):
     client_id: UUID
     master_id: UUID
@@ -123,3 +128,33 @@ class RatingRead(RatingBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AuthResponse(BaseModel):
+    message: str
+    user_id: UUID
+    access_token: str
+    token_type: str
+    expires_in: int
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    user_id: UUID
+
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int
+    user_id: UUID
+
+
+class LogoutResponse(BaseModel):
+    message: str
+
+
+class CurrentUser(BaseModel):
+    id: UUID
+    email: str | None = None
+    role: str | None = None
