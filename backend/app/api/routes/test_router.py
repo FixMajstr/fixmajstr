@@ -1,8 +1,8 @@
 from app.schemas import CurrentUser
 from fastapi import APIRouter, Depends
-from app.schemas.test import HelloResponse
 from app.services.test_service import TestService
 from app.dependencies.auth import get_current_user
+from app.schemas.common_io import MessageResponse
 
 """
 prefix="/test" - to pomeni, da bodo vse poti v tem routerju začele s "/test
@@ -17,7 +17,7 @@ test_router = APIRouter(prefix="/test", tags=["Test"])
     description="Reads one row from the healthcheck table in Supabase.",
     response_description="A list with up to one row from Supabase.",
 )
-def healthcheck() -> HelloResponse:
+def healthcheck() -> MessageResponse:
     service = TestService()
     return service.get_healthcheck()
 
@@ -30,6 +30,6 @@ def healthcheck() -> HelloResponse:
 )
 def healthcheck_protected(
     current_user: CurrentUser = Depends(get_current_user),
-) -> HelloResponse:
+) -> MessageResponse:
     service = TestService()
     return service.get_healthcheck()

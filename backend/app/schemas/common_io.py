@@ -3,6 +3,10 @@ from uuid import UUID
 from typing import Optional
 
 
+class MessageResponse(BaseModel):
+    message: str
+
+
 class ErrorResponse(BaseModel):
     detail: str
 
@@ -28,28 +32,19 @@ class UserRegister(UserCreate):
     password: str
 
 
-class AuthResponse(BaseModel):
-    message: str
-    user_id: UUID
-    access_token: str
-    token_type: str
-    expires_in: int
-
-
-class RegisterResponse(BaseModel):
-    message: str
-    user_id: UUID
-
-
 class RefreshResponse(BaseModel):
+    user_id: UUID
     access_token: str
     token_type: str
     expires_in: int
+
+
+class AuthResponse(MessageResponse, RefreshResponse):
+    pass
+
+
+class RegisterResponse(MessageResponse):
     user_id: UUID
-
-
-class LogoutResponse(BaseModel):
-    message: str
 
 
 class CurrentUser(BaseModel):

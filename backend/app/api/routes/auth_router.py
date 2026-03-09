@@ -4,10 +4,10 @@ from app.schemas import (
     AuthResponse,
     CurrentUser,
     ErrorResponse,
-    LogoutResponse,
     RefreshResponse,
     RegisterResponse,
     UserLogin,
+    MessageResponse,
     UserRegister,
 )
 from app.services.user_service import UserService
@@ -63,7 +63,7 @@ class AuthRouter:
             "/logout",
             self.logout,
             methods=["POST"],
-            response_model=LogoutResponse,
+            response_model=MessageResponse,
             responses={
                 500: {"model": ErrorResponse, "description": "Internal server error"},
             },
