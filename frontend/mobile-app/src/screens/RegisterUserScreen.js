@@ -9,14 +9,62 @@ import {
   Image,
 } from "react-native";
 import bigTextLogo from "../../assets/FixMajstr_txt.png";
+import { registerUser } from "../services/api";
 
-export default function RegisterUserScreen() {
+export default function RegisterUserScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleRegister = async () => {
+    const nameRegex = /^[a-zA-ZčšžČŠŽ\s]{2,50}$/;
+    if (!fullName) {
+      setError("Ime je obvezno!");
+      return;
+    }
+    if (!nameRegex.test(fullName)) {
+      setError("Ime ne sme vsebovati številk!");
+      return;
+    }
+    if (!email) {
+      setError("Email je obvezen!");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Email ni veljaven!");
+      return;
+    }
+    if (!password) {
+      setError("Geslo je obvezno!");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Geslo mora imeti vsaj 8 znakov!");
+      return;
+    }
+    if (!repeatPassword) {
+      setError("Potrdi geslo!");
+      return;
+    }
+    if (password !== repeatPassword) {
+      setError("Gesli se ne ujemata!");
+      return;
+    }
+    try {
+      setLoading(true);
+      const data = await registerUser(fullName, email, password);
+      console.log("Registracija uspešna:", data);
+      navigation.navigate("Login");
+    } catch (err) {
+      setError("Napaka pri registraciji: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -76,6 +124,7 @@ export default function RegisterUserScreen() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.buttonRegisterUser]}
+                onPress={handleRegister}
               >
                 <Text style={styles.buttonText}>REGISTER USER</Text>
               </TouchableOpacity>
