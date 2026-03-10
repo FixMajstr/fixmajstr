@@ -1,4 +1,4 @@
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, require_master_role
 from fastapi import APIRouter, Response, Header, Depends
 from app.schemas import (
     AuthResponse,
@@ -13,6 +13,7 @@ from app.schemas import (
 from app.services.user_service import UserService
 from app.dependencies.supabase import supabase
 from typing import Annotated
+from app.core.common import Role
 
 
 class AuthRouter:
@@ -36,6 +37,17 @@ class AuthRouter:
 
         self.router.add_api_route(
             "/register",
+            self.register,
+            methods=["POST"],
+            response_model=RegisterResponse,
+            responses={
+                400: {"model": ErrorResponse, "description": "Registration failed"},
+                500: {"model": ErrorResponse, "description": "Internal server error"},
+            },
+        )
+
+        self.router.add_api_route(
+            "/register-master",
             self.register,
             methods=["POST"],
             response_model=RegisterResponse,
@@ -88,6 +100,10 @@ class AuthRouter:
 
     def register(self, request: UserRegister) -> RegisterResponse:
         return self.service.register_user(request)
+
+    def register_master(self, request: UserRegister) -> RegisterResponse:
+        role = Role.MASTER
+        return self.service.register_user(request, role=role)
 
     def refresh(
         self,

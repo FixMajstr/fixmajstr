@@ -1,6 +1,7 @@
 from app.schemas import CurrentUser, UserLogin
 from fastapi import HTTPException, Response
 from supabase import Client
+from app.core.common import Role
 
 
 class UserService:
@@ -54,7 +55,7 @@ class UserService:
             "expires_in": session.expires_in,
         }
 
-    def register_user(self, request_data) -> dict:
+    def register_user(self, request_data, role: Role = Role.CLIENT) -> dict:
         try:
             auth_response = self.supabase.auth.sign_up(
                 {
@@ -63,7 +64,7 @@ class UserService:
                     "options": {
                         "data": {
                             "full_name": request_data.full_name,
-                            "role": "client",  # default role for new users later can be admin or master
+                            "role": role.value,
                             "phone": request_data.phone,
                             "avatar_url": request_data.avatar_url,
                         }
@@ -75,6 +76,9 @@ class UserService:
 
         if not auth_response.user:
             raise HTTPException(status_code=400, detail="Failed to register user")
+
+        if (role == Role.MASTER.value) and auth_response.user:
+            pass  # TODO: Here we should create a new master in our master repository.
 
         return {
             "message": "User registered!",
