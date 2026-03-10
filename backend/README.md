@@ -349,9 +349,8 @@ security = HTTPBearer()
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    supabase=Depends(get_supabase),
+    supabase=Depends(get_supabase_client),
 ) -> CurrentUser:
-
     token = credentials.credentials
 
     if not token:
@@ -368,7 +367,10 @@ def get_current_user(
     return CurrentUser(
         id=user_response.user.id,
         email=user_response.user.email,
-        role=user_response.user.role,
+        role=user_response.user.user_metadata.get("role"),
+        phone=user_response.user.user_metadata.get("phone"),
+        full_name=user_response.user.user_metadata.get("full_name"),
+        avatar_url=user_response.user.user_metadata.get("avatar_url"),
     )
 ```
 
@@ -416,7 +418,10 @@ Response:
 {
   "id": "uuid",
   "email": "user@example.com",
-  "role": "user"
+  "role": "client",
+  "phone": "123123123",
+  "full_name": "Janez Novak",
+  "avatar_url": "https://fixmajstr.com/img/neki.png"
 }
 ```
 
@@ -467,6 +472,158 @@ Authorization: Bearer <access_token>
 ```
 401 Unauthorized
 ```
+
+---
+
+# Protected routes (avtorizacija)
+
+## Kako deluje avtorizacija endpointa
+
+Avtorizacija preverja **ali ima prijavljen uporabnik dovoljenje za dostop do določenega endpointa**.
+
+Avtorizacija se izvaja **po avtentikaciji**, kar pomeni:
+
+1. Najprej preverimo uporabnika (`get_current_user`)
+2. Nato preverimo njegovo **vlogo (role)**
+
+### Flow
+
+```
+Request
+   ↓
+Authorization header
+   ↓
+get_current_user dependency
+   ↓
+require_role dependency
+   ↓
+Route dobi current_user
+```
+
+Če uporabnik:
+
+- **ima dovoljene pravice** → route se izvede
+- **nima dovoljene vloge** → API vrne **403 Forbidden**
+
+---
+
+# Role authorization dependency
+
+Za preverjanje vlog uporabljamo funkcijo `_requires_role`, ki sprejme dovoljene vloge.
+
+```python
+from fastapi import Depends, HTTPException
+from app.dependencies.auth import get_current_user
+from app.schemas.schemas import CurrentUser
+
+
+def _requires_role(*allowed_roles: str):
+    def role_dependency(current_user: CurrentUser = Depends(get_current_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return current_user
+
+    return role_dependency
+```
+
+Ta funkcija omogoča, da enostavno definiramo različne nivoje dostopa.
+
+---
+
+# Definicija role dependencies
+
+Na podlagi `_requires_role` lahko definiramo različne nivoje dostopa.
+
+```python
+from app.core.common import Role
+
+require_master_role = _requires_role(Role.MASTER.value, Role.ADMIN.value)
+require_admin_role = _requires_role(Role.ADMIN.value)
+```
+
+## Pravila dostopa
+
+| Role   | require_master_role | require_admin_role |
+| ------ | ------------------- | ------------------ |
+| client | ❌                  | ❌                 |
+| master | ✅                  | ❌                 |
+| admin  | ✅                  | ✅                 |
+
+---
+
+# Primer route z avtorizacijo
+
+Route lahko zahteva določeno vlogo.
+
+```python
+from fastapi import APIRouter, Depends
+from app.schemas.schemas import CurrentUser
+from app.dependencies.roles import require_master_role
+
+router = APIRouter()
+
+@router.get("/admin-data")
+def get_admin_data(current_user: CurrentUser = Depends(require_master_role)):
+    return {"message": "Only master or admin can access this"}
+```
+
+Če uporabnik nima ustrezne vloge, endpoint vrne:
+
+```
+403 Forbidden
+```
+
+---
+
+# Primer requesta
+
+```
+GET /admin-data
+```
+
+Header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Če ima uporabnik vlogo `master` ali `admin`, bo response:
+
+```json
+{
+  "message": "Only master or admin can access this"
+}
+```
+
+Če ima uporabnik vlogo `client`, API vrne:
+
+```
+403 Forbidden
+```
+
+---
+
+# Kako avtorizacija deluje v arhitekturi projekta
+
+Avtorizacija se izvede **pred business logiko**.
+
+```
+Route
+   ↓
+get_current_user (avtentikacija)
+   ↓
+require_role (avtorizacija)
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Database
+```
+
+`get_current_user` preveri **identiteto uporabnika**, `require_role` pa preveri **njegove pravice**.
+
+Business logika v `Service` sloju se izvede samo, če uporabnik uspešno prestane obe preverjanji.
 
 ---
 
