@@ -53,4 +53,21 @@ export const registerUser = async (fullName, email, password) => {
   }
 };
 
+export const registerMajstr = async (fullName, email, password) => {
+  try {
+    const response = await api.post("/auth/register-master", {
+      full_name: fullName,
+      email,
+      password,
+      role: "master",
+      phone: null,
+      avatar_url: null,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Register failed:", error);
+    throw error;
+  }
+};
+
 export default api;
