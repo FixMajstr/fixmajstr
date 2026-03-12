@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { loginUser } from "../services/api";
 import bigTextLogo from "../../assets/FixMajstr_txt.png";
-//import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -22,9 +22,10 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
       const data = await loginUser(email, password);
-      //await AsyncStorage.setItem('access_token', data.access_token);
       console.log("Login uspešen:", data);
-      //navigation.navigate('');
+      await SecureStore.setItemAsync('access_token', data.access_token);
+      await SecureStore.setItemAsync('user_id', data.user_id);
+      navigation.navigate('Home');
     } catch (err) {
       setError("Napaka pri prijavi: " + err.message);
     } finally {
