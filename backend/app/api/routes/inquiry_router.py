@@ -44,7 +44,7 @@ def get_my_inquiries(
 @inquiry_router.get(
     "/received",
     response_model=InquiryListResponse,
-    summary="Get received inquiries (for masters)",
+    summary="Get received inquiries (Mojstri)",
     description="Get all inquiries received by the current master."
 )
 def get_received_inquiries(
