@@ -48,7 +48,7 @@ class AuthRouter:
 
         self.router.add_api_route(
             "/register-master",
-            self.register,
+            self.register_master,
             methods=["POST"],
             response_model=RegisterResponse,
             responses={
