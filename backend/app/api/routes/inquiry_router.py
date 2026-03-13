@@ -9,6 +9,7 @@ from app.schemas import (
     InquiryStatusUpdate
 )
 from app.dependencies.auth import get_current_user, require_master_role
+from app.schemas.common_io import InquiryResponseUpdate
 from typing import Dict, Any
 
 inquiry_router = APIRouter(prefix="/inquiries", tags=["Inquiries"])
@@ -81,3 +82,18 @@ def update_inquiry_status(
 ):
     service = InquiryService()
     return service.update_inquiry_status(inquiry_id, status_update, current_user)
+
+
+@inquiry_router.post(
+    "/{inquiry_id}/respond",
+    response_model=Dict[str, Any],
+    summary="Respond to inquiry",
+    description="Allow masters to respond to client inquiries."
+)
+def respond_to_inquiry(
+        inquiry_id: UUID,
+        response_update: InquiryResponseUpdate,
+        current_user: CurrentUser = Depends(require_master_role)
+):
+    service = InquiryService()
+    return service.respond_to_inquiry(inquiry_id, response_update, current_user)

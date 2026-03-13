@@ -65,6 +65,7 @@ class InquiryResponse(BaseModel):
     message: Optional[str] = None
     status: Optional[str] = None
     response: Optional[str] = None
+    responded_at: Optional[datetime] = None
 
 
 class InquiryListResponse(BaseModel):
@@ -74,3 +75,7 @@ class InquiryListResponse(BaseModel):
 
 class InquiryStatusUpdate(BaseModel):
     status: str
+
+
+class InquiryResponseUpdate(BaseModel):
+    response: str
