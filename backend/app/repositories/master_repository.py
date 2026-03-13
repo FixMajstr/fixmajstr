@@ -61,7 +61,7 @@ class MastersRepository:
 
         return result.data[0]
 
-        def search(
+    def search(
         self,
         query: Optional[str] = None,
         category: Optional[str] = None,
@@ -84,7 +84,7 @@ class MastersRepository:
             if not master_ids_filter:
                 return [], 0
 
-        select_fields = "*, users!inner(full_name, email, phone, avatar_url)"
+        select_fields = "*"
 
         # --- count query ---
         count_q = supabase.table("masters").select(select_fields, count="exact")
@@ -100,12 +100,8 @@ class MastersRepository:
             if master_ids_filter is not None:
                 q = q.in_("id", master_ids_filter)
             if query:
-                q = q.or_(
-                    f"description.ilike.%{query}%,"
-                    f"users.full_name.ilike.%{query}%"
-                )
+                q = q.ilike("description", f"%{query}%")
 
-            # We need to keep the modified reference; supabase-py returns new objects
             if q is count_q:
                 count_q = q
             else:
@@ -118,13 +114,18 @@ class MastersRepository:
         data_q = data_q.range(offset, offset + limit - 1)
         data_result = data_q.execute()
 
-        return data_result.data or [], total
+        masters = data_result.data or []
+
+        # Enrich each master with user metadata from auth.users
+        for master in masters:
+            master["_user"] = self._get_user_metadata(master["user_id"])
+
+        return masters, total
 
     def get_by_id_with_relations(self, master_id: UUID) -> Optional[dict]:
-        """Get a single master with user info and services."""
         result = (
             supabase.table("masters")
-            .select("*, users!inner(full_name, email, phone, avatar_url)")
+            .select("*")
             .eq("id", str(master_id))
             .limit(1)
             .execute()
@@ -133,6 +134,7 @@ class MastersRepository:
             return None
 
         master = result.data[0]
+        master["_user"] = self._get_user_metadata(master["user_id"])
 
         svc_result = (
             supabase.table("master_services")
@@ -148,6 +150,20 @@ class MastersRepository:
 
         return master
 
+    def _get_user_metadata(self, user_id: str) -> dict:
+        try:
+            response = supabase.auth.admin.get_user_by_id(user_id)
+            if response and response.user:
+                meta = response.user.user_metadata or {}
+                return {
+                    "full_name": meta.get("full_name"),
+                    "email": response.user.email,
+                    "phone": meta.get("phone"),
+                    "avatar_url": meta.get("avatar_url"),
+                }
+        except Exception:
+            pass
+        return {}
 
     def delete(self, master_id: UUID) -> bool:
         result = supabase.table("masters").delete().eq("id", str(master_id)).execute()

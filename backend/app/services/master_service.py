@@ -10,13 +10,11 @@ from app.schemas import (
     MasterDetailResponse,
 )
 
-
 class MasterService:
     def __init__(self):
         self.repository = MastersRepository()
 
     def search_masters(self, params: MasterSearchParams) -> MasterListResponse:
-        """Search and filter masters with pagination."""
         try:
             results, total = self.repository.search(
                 query=params.query,
@@ -44,7 +42,6 @@ class MasterService:
             )
 
     def get_master_detail(self, master_id: UUID) -> MasterDetailResponse:
-        """Get full detail for a single master."""
         try:
             master = self.repository.get_by_id_with_relations(master_id)
             if not master:
@@ -58,10 +55,8 @@ class MasterService:
                 detail=f"Failed to get master detail: {str(e)}",
             )
 
-    # ---- private helpers ----
-
     def _to_list_item(self, row: dict) -> MasterListItem:
-        user = row.get("users") or {}
+        user = row.get("_user") or {}
         return MasterListItem(
             id=row["id"],
             user_id=row["user_id"],
@@ -75,7 +70,7 @@ class MasterService:
         )
 
     def _to_detail(self, row: dict) -> MasterDetailResponse:
-        user = row.get("users") or {}
+        user = row.get("_user") or {}
         return MasterDetailResponse(
             id=row["id"],
             user_id=row["user_id"],

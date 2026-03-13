@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.api.routes.test_router import test_router
 from app.api.routes.auth_router import AuthRouter
 from app.api.routes.inquiry_router import inquiry_router
+from app.api.routes.master_router import master_router
 
 
 # from app.api.routes import auth, users, items
