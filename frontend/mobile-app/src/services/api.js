@@ -36,4 +36,26 @@ export const loginUser = async (email, password) => {
   }
 };
 
+export const getMajstrProfile = async (masterId) => {
+  // TODO
+  throw new Error('Endpoint not implemented');
+};
+
+
+export const getMajstrPastWork = async (masterId) => {
+  // TODO
+  throw new Error('Endpoint not implemented');
+};
+
+export const getMajstrRatings = async (masterId) => {
+  // TODO
+  throw new Error('Endpoint not implemented');
+};
+
+
+export const submitRating = async ({ masterId, clientId, score, comment }) => {
+  // TODO
+  throw new Error('Endpoint not implemented');
+};
+
 export default api;
