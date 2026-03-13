@@ -1,7 +1,7 @@
 from app.repositories.inquiries_repository import InquiriesRepository
 from app.repositories.master_repository import MastersRepository
 from app.schemas import InquiryCreate, InquiryResponse, InquiryListResponse, InquiryStatusUpdate, InquiryUpdate
-from app.schemas.common_io import MessageResponse
+from app.schemas.common_io import MessageResponse, InquiryResponseUpdate
 from app.schemas import CurrentUser
 from fastapi import HTTPException
 from uuid import UUID
@@ -107,6 +107,40 @@ class InquiryService:
                 raise e
             raise HTTPException(status_code=500, detail=f"Failed to update inquiry: {str(e)}")
 
+    def respond_to_inquiry(self, inquiry_id: UUID, response_update: InquiryResponseUpdate, current_user: CurrentUser) -> Dict[str, Any]:
+        """Allow masters to respond to inquiries"""
+        try:
+            if current_user.role not in ["master", "admin"]:
+                raise HTTPException(status_code=403, detail="Only masters can respond to inquiries")
+
+            inquiry = self.repository.get_by_id(inquiry_id)
+            if not inquiry:
+                raise HTTPException(status_code=404, detail="Inquiry not found")
+
+            if current_user.role == "master":
+                master = self.masters_repository.get_by_user_id(current_user.id)
+                if not master or str(master["id"]) != str(inquiry["master_id"]):
+                    raise HTTPException(status_code=403, detail="You can only respond to inquiries sent to you")
+
+            # Create update payload with response and status
+            update_data = {
+                "response": response_update.response,
+                "status": "responded"
+            }
+            
+           
+            
+            updated_inquiry = self.repository.update(inquiry_id, InquiryUpdate(**update_data))
+
+            return {
+                "message": "Response sent successfully",
+                "inquiry": self._format_inquiry_response(updated_inquiry)
+            }
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=500, detail=f"Failed to respond to inquiry: {str(e)}")
+
     def get_inquiry_by_id(self, inquiry_id: UUID, current_user: CurrentUser) -> InquiryResponse:
         """Get a specific inquiry by ID"""
         try:
@@ -139,5 +173,7 @@ class InquiryService:
             client_id=UUID(inquiry["client_id"]),
             master_id=UUID(inquiry["master_id"]),
             message=inquiry.get("message"),
-            status=inquiry.get("status")
+            status=inquiry.get("status"),
+            response=inquiry.get("response"),
+            responded_at=datetime.fromisoformat(inquiry["responded_at"].replace("Z", "+00:00")) if inquiry.get("responded_at") and isinstance(inquiry["responded_at"], str) else inquiry.get("responded_at")
         )

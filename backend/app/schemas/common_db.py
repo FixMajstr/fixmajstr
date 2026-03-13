@@ -62,6 +62,7 @@ class InquiryBase(BaseModel):
     master_id: UUID
     message: Optional[str] = None
     status: Optional[str] = None
+    response: Optional[str] = None
 
 
 class InquiryCreate(InquiryBase):
@@ -71,11 +72,13 @@ class InquiryCreate(InquiryBase):
 class InquiryUpdate(BaseModel):
     message: Optional[str] = None
     status: Optional[str] = None
+    response: Optional[str] = None
 
 
 class InquiryRead(InquiryBase):
     id: UUID
     created_at: datetime
+    responded_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
