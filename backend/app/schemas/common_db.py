@@ -1,19 +1,8 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, List
-
-
-class UserBase(BaseModel):
-    email: EmailStr
-    full_name: str
-    role: str
-    phone: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    pass
+from typing import Optional
+from .common_io import UserBase
 
 
 class UserRead(UserBase):
@@ -21,7 +10,6 @@ class UserRead(UserBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class CategoryBase(BaseModel):
@@ -40,10 +28,9 @@ class CategoryRead(CategoryBase):
 
 class MasterBase(BaseModel):
     user_id: UUID
-    category_id: Optional[UUID] = None
     description: Optional[str] = None
-    location: Optional[str] = None
-    avg_rating: Optional[float] = None
+    location: str
+    avg_rating: float = 0
     response_time: Optional[str] = None
 
 
@@ -52,10 +39,8 @@ class MasterCreate(MasterBase):
 
 
 class MasterUpdate(BaseModel):
-    category_id: Optional[UUID] = None
     description: Optional[str] = None
     location: Optional[str] = None
-    avg_rating: Optional[float] = None
     response_time: Optional[str] = None
 
 
@@ -70,7 +55,6 @@ class MasterWithRelations(MasterRead):
     category: Optional[CategoryRead] = None
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class InquiryBase(BaseModel):
@@ -94,7 +78,6 @@ class InquiryRead(InquiryBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class RatingBase(BaseModel):
