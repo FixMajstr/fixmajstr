@@ -74,3 +74,35 @@ class InquiryListResponse(BaseModel):
 
 class InquiryStatusUpdate(BaseModel):
     status: str
+
+class MasterSearchParams(BaseModel):
+    query: Optional[str] = None
+    category: Optional[str] = None
+    location: Optional[str] = None
+    min_rating: Optional[float] = None
+    limit: int = 20
+    offset: int = 0
+
+
+class MasterListItem(BaseModel):
+    id: UUID
+    user_id: UUID
+    full_name: Optional[str] = None
+    description: Optional[str] = None
+    location: str
+    avg_rating: float = 0
+    response_time: Optional[str] = None
+    avatar_url: Optional[str] = None
+    services: List[str] = []
+
+
+class MasterListResponse(BaseModel):
+    masters: List[MasterListItem]
+    total: int
+    limit: int
+    offset: int
+
+
+class MasterDetailResponse(MasterListItem):
+    email: Optional[str] = None
+    phone: Optional[str] = None
