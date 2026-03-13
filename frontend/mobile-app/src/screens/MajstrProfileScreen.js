@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   StyleSheet,
   Text,
@@ -7,62 +7,69 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { getMajstrProfile } from '../services/api';
-import { colors } from '../theme';
-import { fonts } from '../theme';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { getMajstrProfile } from "../services/api";
+import { colors } from "../theme";
+import { fonts } from "../theme";
 
 // MOCK DATA — replace : endpoint
 const MOCK_RATINGS = [
-  { id: 'r1', master_id: 'mock-uuid', score: 5, comment: 'Nice' },
-  { id: 'r2', master_id: 'mock-uuid', score: 4, comment: 'Decent' },
-  { id: 'r3', master_id: 'mock-uuid', score: 2, comment: 'Ok' },
-  { id: 'r4', master_id: 'mock-uuid', score: 1, comment: 'Bad' },
+  { id: "r1", master_id: "mock-uuid", score: 5, comment: "Nice" },
+  { id: "r2", master_id: "mock-uuid", score: 4, comment: "Decent" },
+  { id: "r3", master_id: "mock-uuid", score: 2, comment: "Ok" },
+  { id: "r4", master_id: "mock-uuid", score: 1, comment: "Bad" },
 ];
 
 // MOCK DATA - replace : endpoint
 const MOCK_PAST_WORK = [
   {
-    id: 'w1',
-    title: 'Popravil eno pipo',
-    date: '31.1.2025',
-    description: 'Sample',
+    id: "w1",
+    title: "Popravil eno pipo",
+    date: "31.1.2025",
+    description: "Sample",
   },
   {
-    id: 'w2',
-    title: 'Popravil še eno pipo',
-    date: '31.12.2025',
-    description: 'Sample',
+    id: "w2",
+    title: "Popravil še eno pipo",
+    date: "31.12.2025",
+    description: "Sample",
   },
 ];
 
 // MOCK DATA — replace : endpoint
 const MOCK_MASTER = {
-  id: 'mock-uuid',
-  description: 'Sample text.',
-  location: 'Maribor',
+  id: "mock-uuid",
+  description: "Sample text.",
+  location: "Maribor",
   avg_rating: 4,
-  response_time: '< 2h',
+  response_time: "< 2h",
   user: {
-    full_name: 'Peter Majster',
-    phone: '041 123 456',
-    avatar_url: 'https://static.wikia.nocookie.net/rage-guy/images/f/f9/Spodermen.gif/revision/latest/scale-to-width-down/1200?cb=20250115154335',
+    full_name: "Peter Majster",
+    phone: "041 123 456",
+    avatar_url:
+      "https://static.wikia.nocookie.net/rage-guy/images/f/f9/Spodermen.gif/revision/latest/scale-to-width-down/1200?cb=20250115154335",
   },
   category: {
-    name: 'Gozdar',
+    name: "Gozdar",
   },
 };
 
 export default function MajstrProfileScreen({ navigation, route }) {
   // TODO MOCK_MASTER - getMajstrProfile(route.params?.masterId)
   const master = route.params?.master ?? MOCK_MASTER;
+  //FM 103:
+  // isMaster is set to true when the logged-in user is the master being viewed.
+  // TODO: replace with real role check once auth context is wired.
+  const [isMaster, setIsMaster] = React.useState(
+    route.params?.isMaster ?? false,
+  );
+  //const isMaster = true; //za testiranje mojster funkcionalnosti povprasevanj
 
   const handleSendInquiry = () => {
-    // navigation.navigate(___), Donko;
-    console.log('Pošlji povpraševanje za:', master.id);
+    navigation.navigate("Povprasevanje", { master });
   };
 
   const renderWrenchRating = (rating) => {
@@ -83,19 +90,22 @@ export default function MajstrProfileScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.mainWrapper} edges={['bottom']}>
+    <SafeAreaView style={styles.mainWrapper} edges={["bottom"]}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <LinearGradient
-          colors={[colors.primaryLightA, 'rgba(124,159,255,0.2)', colors.white]}
+          colors={[colors.primaryLightA, "rgba(124,159,255,0.2)", colors.white]}
           style={styles.hero}
           start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}>
-
+          end={{ x: 0.5, y: 1 }}
+        >
           <View style={styles.header}>
             <Image
-              source={require('../../assets/FixMajstr_logo.png')}
+              source={require("../../assets/FixMajstr_logo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -103,7 +113,10 @@ export default function MajstrProfileScreen({ navigation, route }) {
 
           <View style={styles.avatarWrapper}>
             {master.user.avatar_url ? (
-              <Image source={{ uri: master.user.avatar_url }} style={styles.avatar} />
+              <Image
+                source={{ uri: master.user.avatar_url }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatarEmpty}>
                 <Text style={styles.avatarEmptyText}>
@@ -120,11 +133,19 @@ export default function MajstrProfileScreen({ navigation, route }) {
           {renderWrenchRating(master.avg_rating)}
           <View style={styles.infoChips}>
             <View style={styles.chip}>
-              <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.textLight} />
+              <MaterialCommunityIcons
+                name="map-marker-outline"
+                size={14}
+                color={colors.textLight}
+              />
               <Text style={styles.chipText}>{master.location}</Text>
             </View>
             <View style={styles.chip}>
-              <MaterialCommunityIcons name="clock-outline" size={14} color={colors.textLight} />
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={14}
+                color={colors.textLight}
+              />
               <Text style={styles.chipText}>Odziv {master.response_time}</Text>
             </View>
           </View>
@@ -151,7 +172,8 @@ export default function MajstrProfileScreen({ navigation, route }) {
           <ScrollView
             style={styles.reviewsScroll}
             nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={false}>
+            showsVerticalScrollIndicator={false}
+          >
             {MOCK_RATINGS.map((rating) => (
               <View key={rating.id} style={styles.reviewCard}>
                 <View style={styles.reviewStarRow}>
@@ -177,17 +199,41 @@ export default function MajstrProfileScreen({ navigation, route }) {
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={handleSendInquiry}
-            activeOpacity={0.8}>
+            activeOpacity={0.8}
+          >
             <Text style={styles.primaryButtonText}>Povpraševanje</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate('RatingScreen', { master })}
-            activeOpacity={0.8}>
+            onPress={() => navigation.navigate("RatingScreen", { master })}
+            activeOpacity={0.8}
+          >
             <Text style={styles.secondaryButtonText}>Oceni mojstra</Text>
           </TouchableOpacity>
-        </View>
 
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setIsMaster((prev) => !prev)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.secondaryButtonText}>
+              {isMaster ? "Preklopi na stranko" : "Preklopi na mojstra"}
+            </Text>
+          </TouchableOpacity>
+
+          {/*FM 103: Only shown when the logged-in user IS this master */}
+          {isMaster && (
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => navigation.navigate("ReceivedInquiries")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Prejeta povpraševanja
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,8 +254,8 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: 20,
     paddingTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   logo: {
     width: 40,
@@ -219,26 +265,26 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: -55,
     borderWidth: 4,
     borderColor: colors.white,
     backgroundColor: colors.border,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   avatarEmpty: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.primaryLight,
   },
   avatarEmptyText: {
@@ -247,7 +293,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   profileInfo: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 65,
     marginBottom: 10,
     paddingHorizontal: 20,
@@ -265,13 +311,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   infoChips: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 12,
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: colors.backgroundLight,
     paddingHorizontal: 10,
@@ -286,8 +332,8 @@ const styles = StyleSheet.create({
     color: colors.textLight,
   },
   wrenchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   wrenchIcon: {
     marginHorizontal: 4,
@@ -346,7 +392,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight,
   },
   reviewStarRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 6,
   },
   reviewComment: {
@@ -364,8 +410,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     height: 56,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -383,8 +429,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
     borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   secondaryButtonText: {
     color: colors.primary,
