@@ -14,3 +14,4 @@ auth_router = AuthRouter().router
 api_router.include_router(test_router)
 api_router.include_router(auth_router)
 api_router.include_router(inquiry_router)
+api_router.include_router(master_router)
