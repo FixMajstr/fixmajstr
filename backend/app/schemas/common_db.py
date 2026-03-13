@@ -1,10 +1,3 @@
-<<<<<<< HEAD:backend/app/schemas/common_db.py
-from pydantic import BaseModel, ConfigDict
-from uuid import UUID
-from datetime import datetime
-from typing import Optional
-from .common_io import UserBase
-=======
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from uuid import UUID
 from datetime import datetime
@@ -21,7 +14,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     pass
->>>>>>> 29b7b6a (FM-91/implementacija-sistema-ocen):backend/app/schemas/schemas.py
 
 
 class UserRead(UserBase):
@@ -29,6 +21,12 @@ class UserRead(UserBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AuthenticatedUser(BaseModel):
+    id: UUID
+    email: EmailStr
+    role: Optional[str] = None
 
 
 class CategoryBase(BaseModel):
@@ -76,6 +74,11 @@ class MasterWithRelations(MasterRead):
     model_config = ConfigDict(from_attributes=True)
 
 
+class MasterRankingRead(MasterRead):
+    total_ratings: int = 0
+    ranking_score: float
+
+
 class InquiryBase(BaseModel):
     client_id: UUID
     master_id: UUID
@@ -100,7 +103,6 @@ class InquiryRead(InquiryBase):
 
 
 class RatingBase(BaseModel):
-    client_id: UUID
     master_id: UUID
     score: int = Field(ge=1, le=5)
     comment: Optional[str] = None
@@ -117,14 +119,12 @@ class RatingUpdate(BaseModel):
 
 class RatingRead(RatingBase):
     id: UUID
+    client_id: UUID
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-<<<<<<< HEAD:backend/app/schemas/common_db.py
-=======
 
 
 class RatingSummary(BaseModel):
     average_score: float
     total_ratings: int
->>>>>>> 29b7b6a (FM-91/implementacija-sistema-ocen):backend/app/schemas/schemas.py

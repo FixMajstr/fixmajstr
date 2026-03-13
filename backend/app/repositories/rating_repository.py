@@ -34,6 +34,15 @@ class RatingRepository:
         )
         return result.data
 
+    def get_rating_scores(self):
+        result = (
+            supabase
+            .table("ratings")
+            .select("master_id, score")
+            .execute()
+        )
+        return result.data
+
     def update_master_average_rating(self, master_id: UUID, avg_rating: float):
         result = (
             supabase
