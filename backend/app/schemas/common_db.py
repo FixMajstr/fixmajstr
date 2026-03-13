@@ -1,8 +1,19 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
-from .common_io import UserBase
+
+
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
+    role: str
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+class UserCreate(UserBase):
+    pass
 
 
 class UserRead(UserBase):
@@ -10,6 +21,12 @@ class UserRead(UserBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AuthenticatedUser(BaseModel):
+    id: UUID
+    email: EmailStr
+    role: Optional[str] = None
 
 
 class CategoryBase(BaseModel):
@@ -57,6 +74,11 @@ class MasterWithRelations(MasterRead):
     model_config = ConfigDict(from_attributes=True)
 
 
+class MasterRankingRead(MasterRead):
+    total_ratings: int = 0
+    ranking_score: float
+
+
 class InquiryBase(BaseModel):
     client_id: UUID
     master_id: UUID
@@ -81,9 +103,8 @@ class InquiryRead(InquiryBase):
 
 
 class RatingBase(BaseModel):
-    client_id: UUID
     master_id: UUID
-    score: int
+    score: int = Field(ge=1, le=5)
     comment: Optional[str] = None
 
 
@@ -92,12 +113,18 @@ class RatingCreate(RatingBase):
 
 
 class RatingUpdate(BaseModel):
-    score: Optional[int] = None
+    score: Optional[int] = Field(default=None, ge=1, le=5)
     comment: Optional[str] = None
 
 
 class RatingRead(RatingBase):
     id: UUID
+    client_id: UUID
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class RatingSummary(BaseModel):
+    average_score: float
+    total_ratings: int
