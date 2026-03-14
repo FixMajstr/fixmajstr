@@ -3,12 +3,15 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Image,
 } from "react-native";
-import bigTextLogo from "../../assets/FixMajstr_txt.png";
+import { LinearGradient } from "expo-linear-gradient";
+import { KeyboardAvoidingView, Platform } from "react-native";
+import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
 import { registerMajstr } from "../services/api";
 
 export default function RegisterMajstrScreen({ navigation }) {
@@ -16,6 +19,8 @@ export default function RegisterMajstrScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [storitev, setStoritev] = useState("");
+  const [oMeni, setOMeni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -67,144 +72,211 @@ export default function RegisterMajstrScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#7C9FFF", "#275CED"]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 0.33 }}
+      style={styles.container}
+    >
       <View style={styles.logoContainer}>
         <Image
           source={bigTextLogo}
-          style={{ width: "90%", height: 80 }}
+          style={{ width: "100%", height: 80 }}
           resizeMode="contain"
         />
+        <Text style={styles.logoText}>Mojster en klik vstran</Text>
       </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1, width: "100%" }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={{ width: "100%" }}
+          contentContainerStyle={styles.card}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>Registracija Mojstra</Text>
 
-      <View style={styles.content}>
-        <Text style={styles.loginTitle}>REGISTER MAJSTR</Text>
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>NAME</Text>
-          <TextInput
-            style={styles.input}
-            value={fullName}
-            onChangeText={setFullName}
-            autoCapitalize="none"
-          />
-          <Text style={styles.label}>EMAIL</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>PASSWORD</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={true}
-          />
-
-          <Text style={styles.label}>CONFIRM PASSWORD</Text>
-          <TextInput
-            style={styles.input}
-            value={repeatPassword}
-            onChangeText={setRepeatPassword}
-            secureTextEntry={true}
-          />
-
-          {error && <Text style={styles.errorText}>{error}</Text>}
-
-          {loading ? (
-            <ActivityIndicator
-              size="large"
-              color="#6b7ab5"
-              style={{ marginTop: 20 }}
+          <View style={styles.formContainer}>
+            <Text style={styles.label}>Ime</Text>
+            <TextInput
+              style={styles.input}
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="none"
             />
-          ) : (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonRegisterMajstr]}
-                onPress={handleRegister}
-              >
-                <Text style={styles.buttonText}>REGISTER MAJSTR</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </View>
-    </View>
+
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.label}>Geslo</Text>
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={true}
+            />
+
+            <Text style={styles.label}>Potrdi geslo</Text>
+            <TextInput
+              style={styles.input}
+              value={repeatPassword}
+              onChangeText={setRepeatPassword}
+              secureTextEntry={true}
+            />
+
+            <Text style={styles.label}>Storitev</Text>
+            <TextInput
+              style={styles.input}
+              value={storitev}
+              onChangeText={setStoritev}
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.label}>O meni</Text>
+            <TextInput
+              style={styles.inputMultiline}
+              value={oMeni}
+              onChangeText={setOMeni}
+              multiline={true}
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
+
+            {loading ? (
+              <ActivityIndicator
+                size="large"
+                color="#497AFF"
+                style={{ marginTop: 24 }}
+              />
+            ) : (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.buttonPrimary}
+                  onPress={handleRegister}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.buttonPrimaryText}>Registriraj se</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingTop: 50,
-    padding: 30,
-  },
-  content: {
-    width: "100%",
-    alignItems: "center",
+    paddingTop: 64,
   },
   logoContainer: {
-    marginBottom: 60,
+    marginBottom: 40,
     width: "100%",
     alignItems: "center",
+    paddingVertical: 16,
   },
   logoText: {
-    fontSize: 36,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#1a1a2e",
+    textAlign: "center",
+    fontFamily: "LeagueSpartan-Regular",
+    fontSize: 16,
+    color: "#fff",
+    marginTop: 10,
   },
-  loginTitle: {
-    fontSize: 14,
-    letterSpacing: 3,
-    color: "#888",
-    marginBottom: 30,
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
+    shadowColor: "#1a3a8f",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
+    flexGrow: 1,
+  },
+  title: {
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 32,
+    letterSpacing: 1.5,
+    color: "#275CED",
+    textAlign: "center",
+    marginBottom: 28,
+    fontWeight: "800",
   },
   formContainer: {
     width: "100%",
   },
   label: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1,
-    color: "#333",
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 18,
+    color: "#555",
     marginBottom: 6,
+    marginLeft: 2,
   },
   input: {
     width: "100%",
-    height: 44,
-    backgroundColor: "#e8e8e8",
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    fontSize: 14,
+    height: 46,
+    backgroundColor: "#f0f3ff",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 18,
+    fontSize: 15,
+    fontFamily: "LeagueSpartan-Regular",
+    color: "#1a1a2e",
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  inputMultiline: {
+    width: "100%",
+    height: 120,
+    backgroundColor: "#f0f3ff",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 18,
+    fontSize: 15,
+    fontFamily: "LeagueSpartan-Regular",
+    color: "#1a1a2e",
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
   buttonContainer: {
-    marginTop: 10,
-    gap: 10,
+    marginTop: 8,
+    paddingBottom: 150,
   },
-  button: {
+  buttonPrimary: {
     width: "100%",
-    height: 44,
-    borderRadius: 22,
+    height: 48,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#497AFF",
+    elevation: 4,
   },
-  buttonRegisterMajstr: {
-    backgroundColor: "#8b9fd4",
-  },
-  buttonText: {
+  buttonPrimaryText: {
     color: "#fff",
-    fontSize: 12,
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 16,
     fontWeight: "700",
-    letterSpacing: 1.5,
   },
   errorText: {
-    color: "red",
+    color: "#e03c3c",
+    fontFamily: "LeagueSpartan-Regular",
     fontSize: 13,
     marginBottom: 10,
     textAlign: "center",
