@@ -16,6 +16,21 @@ const api = axios.create({
   timeout: 5000,
 });
 
+//TODO FM-AUTH: Temporary in-memory auth store
+// ReplacAT with AuthContext + expo-secure-store before merging to dev!!!
+// Te variables live only for the current JS session
+let _authToken = null;
+let _currentUserId = null;
+export const setAuthSession = (token, userId) => {
+  _authToken = token;
+  _currentUserId = String(userId);
+};
+export const clearAuthSession = () => {
+  _authToken = null;
+  _currentUserId = null;
+};
+const _authHeader = () => ({ Authorization: `Bearer ${_authToken}` });
+
 export const testApiConnection = async () => {
   try {
     const response = await api.get("/test/healthcheck");
@@ -29,6 +44,10 @@ export const testApiConnection = async () => {
 export const loginUser = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
+    // TODO FM-AUTH: temporary- auto-save token to in-memory store until AuthContext je  wired
+    if (response.data?.access_token && response.data?.user_id) {
+      setAuthSession(response.data.access_token, response.data.user_id);
+    }
     return response.data;
   } catch (error) {
     console.error("Login failed:", error);
@@ -56,124 +75,43 @@ export const submitRating = async ({ masterId, clientId, score, comment }) => {
   throw new Error("Endpoint not implemented");
 };
 
-// FM-101/FM-102: Submit a new inquiry
-// TODO FM-102: replace mock body with real call once auth token storage is wired:
-//   const token = await AsyncStorage.getItem('access_token');
-//   const res = await api.post('/inquiries/', { client_id: '...', master_id, message },
-//     { headers: { Authorization: `Bearer ${token}` } });
-//   return res.data;
+// FM-102: Submit a new inquiry
 export const submitInquiry = async ({ master_id, message }) => {
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          message: "Inquiry created successfully",
-          inquiry: {
-            id: "00000000-0000-0000-0000-000000000000",
-            created_at: new Date().toISOString(),
-            client_id: "00000000-0000-0000-0000-000000000000",
-            master_id,
-            message,
-            status: "pending",
-            response: null,
-          },
-        }),
-      800,
-    ),
+  if (!_authToken) {
+    throw new Error("Ni prijavljenega uporabnika. Prijavite se najprej.");
+  }
+  const response = await api.post(
+    "/inquiries/",
+    { client_id: _currentUserId, master_id, message },
+    { headers: _authHeader() },
   );
+  return response.data;
 };
 
-// FM-100: Get inquiries sent by the logged-in client
-// TODO FM-102: replace mock with real call once auth is wired:
-//   api.get('/inquiries/my-inquiries', { headers: { Authorization: `Bearer ${token}` } })
+// FM-102: Get inquiries sent by the logged-in client
 export const getMyInquiries = async () => {
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          inquiries: [
-            {
-              id: "inq-1",
-              master_id: "mock-uuid",
-              message: "Pipa v kopalnici pušča in voda teče po tleh.",
-              status: "pending",
-              created_at: "2026-03-10T10:00:00Z",
-            },
-            {
-              id: "inq-2",
-              master_id: "mock-uuid",
-              message: "Električni kvart na hodniku, luč ne dela.",
-              status: "accepted",
-              created_at: "2026-03-08T14:00:00Z",
-            },
-            {
-              id: "inq-3",
-              master_id: "mock-uuid",
-              message: "Potrebujem montažo umivalnika v kopalnici.",
-              status: "rejected",
-              created_at: "2026-03-05T09:00:00Z",
-            },
-          ],
-          total: 3,
-        }),
-      600,
-    ),
-  );
+  const response = await api.get("/inquiries/my-inquiries", {
+    headers: _authHeader(),
+  });
+  return response.data;
 };
 
-// FM-100: Get inquiries received by the logged-in master
-// TODO FM-102: replace mock with real call once auth is wired:
-//   api.get('/inquiries/received', { headers: { Authorization: `Bearer ${token}` } })
+// FM-102: Get inquiries received by the logged-in master
 export const getReceivedInquiries = async () => {
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          inquiries: [
-            {
-              id: "inq-4",
-              client_id: "mock-client-1",
-              message: "Pipa v kopalnici pušča in voda teče po tleh.",
-              status: "pending",
-              created_at: "2026-03-10T10:00:00Z",
-            },
-            {
-              id: "inq-5",
-              client_id: "mock-client-2",
-              message: "Električni kvart na hodniku, luč ne dela.",
-              status: "accepted",
-              created_at: "2026-03-08T14:00:00Z",
-            },
-            {
-              id: "inq-6",
-              client_id: "mock-client-3",
-              message: "Zamenjava bojlerja — star ne greje.",
-              status: "rejected",
-              created_at: "2026-03-04T08:00:00Z",
-            },
-          ],
-          total: 3,
-        }),
-      600,
-    ),
-  );
+  const response = await api.get("/inquiries/received", {
+    headers: _authHeader(),
+  });
+  return response.data;
 };
 
-// FM-100: Update inquiry status (master accepts or rejects)
-// TODO FM-102: replace mock with real call once auth is wired:
-//   api.patch(`/inquiries/${inquiryId}/status`, { status },
-//     { headers: { Authorization: `Bearer ${token}` } })
+// FM-102: Update inquiry status
 export const updateInquiryStatus = async (inquiryId, status) => {
-  return new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          message: "Inquiry status updated successfully",
-          inquiry: { id: inquiryId, status },
-        }),
-      400,
-    ),
+  const response = await api.patch(
+    `/inquiries/${inquiryId}/status`,
+    { status },
+    { headers: _authHeader() },
   );
+  return response.data;
 };
 
 export default api;

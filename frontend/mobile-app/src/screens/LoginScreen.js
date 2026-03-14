@@ -19,10 +19,10 @@ export default function LoginScreen({ navigation }) {
 const handleLogin = async () => {
   try {
     setLoading(true);
-    const data = await loginUser(email, password);
-    //await AsyncStorage.setItem('access_token', data.access_token);
+    const data = await loginUser(email, password); // token auto-saved inside loginUser (TODO FM-AUTH)
     console.log('Login uspešen:', data);
-    //navigation.navigate('');
+    // TODO FM-AUTH: temporary navigation – replace with role-aware routing once AuthContext is wired
+    navigation.navigate('MajstrProfile');
   } catch (err) {
     setError('Napaka pri prijavi: ' + err.message);
   } finally {
