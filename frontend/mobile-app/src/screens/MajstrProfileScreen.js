@@ -15,7 +15,21 @@ import { getMajstrProfile } from "../services/api";
 import { colors } from "../theme";
 import { fonts } from "../theme";
 
-// MOCK DATA — replace : endpoint
+// MOCK DATA — remove once navigation always passes masterId from a list screen
+const MOCK_MASTER = {
+  id: "mock-uuid",
+  full_name: "Peter Majster",
+  description: "Izkušen mojster z več kot 10 leti izkušenj na področju vodovodnih inštalacij in ogrevanja. Zagotavljam kakovostno delo in hitro odzivnost.",
+  location: "Maribor",
+  avg_rating: 4,
+  response_time: "< 2h",
+  avatar_url: "https://static.vecteezy.com/system/resources/thumbnails/032/176/191/small/business-avatar-profile-black-icon-man-of-user-symbol-in-trendy-flat-style-isolated-on-male-profile-people-diverse-face-for-social-network-or-web-vector.jpg",
+  services: ["Vodovodne inštalacije", "Ogrevanje"],
+  phone: "041 123 456",
+  email: "peter.majster@email.com",
+};
+
+// MOCK DATA — replace : ratings endpoint
 const MOCK_RATINGS = [
   { id: "r1", master_id: "mock-uuid", score: 5, comment: "Nice" },
   { id: "r2", master_id: "mock-uuid", score: 4, comment: "Decent" },
@@ -23,50 +37,54 @@ const MOCK_RATINGS = [
   { id: "r4", master_id: "mock-uuid", score: 1, comment: "Bad" },
 ];
 
-// MOCK DATA - replace : endpoint
-const MOCK_PAST_WORK = [
-  {
-    id: "w1",
-    title: "Popravil eno pipo",
-    date: "31.1.2025",
-    description: "Sample",
-  },
-  {
-    id: "w2",
-    title: "Popravil še eno pipo",
-    date: "31.12.2025",
-    description: "Sample",
-  },
-];
-
-// MOCK DATA — replace : endpoint
-const MOCK_MASTER = {
-  id: "mock-uuid",
-  description: "Sample text.",
-  location: "Maribor",
-  avg_rating: 4,
-  response_time: "< 2h",
-  user: {
-    full_name: "Peter Majster",
-    phone: "041 123 456",
-    avatar_url:
-      "https://static.wikia.nocookie.net/rage-guy/images/f/f9/Spodermen.gif/revision/latest/scale-to-width-down/1200?cb=20250115154335",
-  },
-  category: {
-    name: "Gozdar",
-  },
-};
 
 export default function MajstrProfileScreen({ navigation, route }) {
-  // TODO MOCK_MASTER - getMajstrProfile(route.params?.masterId)
-  const master = route.params?.master ?? MOCK_MASTER;
+  const masterId = route.params?.masterId;
+  const [master, setMaster] = React.useState(route.params?.master ?? MOCK_MASTER);
+  const [loading, setLoading] = React.useState(!route.params?.master && !!masterId);
+  const [fetchError, setFetchError] = React.useState(null);
+
+  React.useEffect(() => {
+    if (masterId && !route.params?.master) {
+      setLoading(true);
+      getMajstrProfile(masterId)
+        .then(setMaster)
+        .catch((e) => setFetchError(e.message))
+        .finally(() => setLoading(false));
+    }
+  }, [masterId]);
+
   //FM 103:
   // isMaster is set to true when the logged-in user is the master being viewed.
   // TODO: replace with real role check once auth context is wired.
   const [isMaster, setIsMaster] = React.useState(
     route.params?.isMaster ?? false,
   );
-  //const isMaster = true; //za testiranje mojster funkcionalnosti povprasevanj
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.mainWrapper} edges={["bottom"]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontFamily: fonts.regular, color: colors.textLight }}>
+            Nalaganje...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (fetchError || !master) {
+    return (
+      <SafeAreaView style={styles.mainWrapper} edges={["bottom"]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 22 }}>
+          <Text style={{ fontFamily: fonts.regular, color: colors.error, textAlign: "center" }}>
+            {fetchError ?? "Profil mojstra ni bil najden."}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  //const isMaster = true; //testing master inquiries
 
   const handleSendInquiry = () => {
     navigation.navigate("Povprasevanje", { master });
@@ -112,15 +130,15 @@ export default function MajstrProfileScreen({ navigation, route }) {
           </View>
 
           <View style={styles.avatarWrapper}>
-            {master.user.avatar_url ? (
+            {master.avatar_url ? (
               <Image
-                source={{ uri: master.user.avatar_url }}
+                source={{ uri: master.avatar_url }}
                 style={styles.avatar}
               />
             ) : (
               <View style={styles.avatarEmpty}>
                 <Text style={styles.avatarEmptyText}>
-                  {master.user.full_name.slice(0, 2).toUpperCase()}
+                  {master.full_name?.slice(0, 2).toUpperCase() ?? "??"}
                 </Text>
               </View>
             )}
@@ -128,8 +146,8 @@ export default function MajstrProfileScreen({ navigation, route }) {
         </LinearGradient>
 
         <View style={styles.profileInfo}>
-          <Text style={styles.masterName}>{master.user.full_name}</Text>
-          <Text style={styles.categoryText}>{master.category?.name}</Text>
+          <Text style={styles.masterName}>{master.full_name}</Text>
+          <Text style={styles.categoryText}>{master.services?.join(", ")}</Text>
           {renderWrenchRating(master.avg_rating)}
           <View style={styles.infoChips}>
             <View style={styles.chip}>
@@ -140,14 +158,16 @@ export default function MajstrProfileScreen({ navigation, route }) {
               />
               <Text style={styles.chipText}>{master.location}</Text>
             </View>
-            <View style={styles.chip}>
-              <MaterialCommunityIcons
-                name="clock-outline"
-                size={14}
-                color={colors.textLight}
-              />
-              <Text style={styles.chipText}>Odziv {master.response_time}</Text>
-            </View>
+            {master.response_time ? (
+              <View style={styles.chip}>
+                <MaterialCommunityIcons
+                  name="clock-outline"
+                  size={14}
+                  color={colors.textLight}
+                />
+                <Text style={styles.chipText}>Odziv {master.response_time}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -156,16 +176,6 @@ export default function MajstrProfileScreen({ navigation, route }) {
           <Text style={styles.bodyText}>{master.description}</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeading}>Pretekla dela:</Text>
-          {MOCK_PAST_WORK.map((work) => (
-            <View key={work.id} style={styles.workCard}>
-              <Text style={styles.workTitle}>{work.title}</Text>
-              <Text style={styles.workDate}>Datum: {work.date}</Text>
-              <Text style={styles.workDescription}>{work.description}</Text>
-            </View>
-          ))}
-        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionHeading}>Ocene:</Text>
@@ -354,32 +364,7 @@ const styles = StyleSheet.create({
     color: colors.textMedium,
     lineHeight: 22,
   },
-  workCard: {
-    backgroundColor: colors.backgroundLight,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  workTitle: {
-    fontSize: 15,
-    fontFamily: fonts.bold,
-    color: colors.textDark,
-    marginBottom: 2,
-  },
-  workDate: {
-    fontSize: 12,
-    fontFamily: fonts.regular,
-    color: colors.primaryDark,
-    marginBottom: 8,
-  },
-  workDescription: {
-    fontSize: 13,
-    fontFamily: fonts.regular,
-    color: colors.textMedium,
-    lineHeight: 20,
-  },
+
   reviewsScroll: {
     maxHeight: 220,
   },
