@@ -1,7 +1,7 @@
 from typing import Optional, List
 from uuid import UUID
 
-from app.integrations.supabase import supabase
+from app.dependencies.supabase import supabase
 from app.schemas import MasterCreate, MasterUpdate
 
 
@@ -91,3 +91,6 @@ class MasterRepository:
             .execute()
         )
         return bool(result.data)
+
+
+MastersRepository = MasterRepository

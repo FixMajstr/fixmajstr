@@ -2,8 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies.auth import get_current_user
-from app.schemas.schemas import AuthenticatedUser, RatingCreate, RatingRead, RatingSummary
+from app.dependencies.auth import get_current_user
+from app.schemas import CurrentUser, RatingCreate, RatingRead, RatingSummary
 from app.services.rating_service import RatingService
 
 
@@ -21,7 +21,7 @@ rating_router = APIRouter(
 )
 def create_rating(
     payload: RatingCreate,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     service = RatingService()
     return service.create_rating(payload, current_user)

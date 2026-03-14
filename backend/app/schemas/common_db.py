@@ -109,7 +109,7 @@ class RatingBase(BaseModel):
 
 
 class RatingCreate(RatingBase):
-    pass
+    client_id: Optional[UUID] = None
 
 
 class RatingUpdate(BaseModel):

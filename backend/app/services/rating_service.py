@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 from app.repositories.master_repository import MasterRepository
 from app.repositories.rating_repository import RatingRepository
-from app.schemas.schemas import AuthenticatedUser, RatingCreate, RatingSummary, RatingRead
+from app.schemas import CurrentUser, RatingCreate, RatingRead, RatingSummary
 
 
 class RatingService:
@@ -12,14 +12,14 @@ class RatingService:
         self.repository = RatingRepository()
         self.master_repository = MasterRepository()
 
-    def create_rating(self, payload: RatingCreate, current_user: AuthenticatedUser) -> RatingRead:
-        master_rows = self.master_repository.get_master_by_id(payload.master_id)
-        if not master_rows:
+    def create_rating(self, payload: RatingCreate, current_user: CurrentUser) -> RatingRead:
+        master_row = self.master_repository.get_by_id(payload.master_id)
+        if not master_row:
             raise HTTPException(status_code=404, detail="Master not found.")
 
         created_rows = self.repository.create_rating(
             {
-                **payload.model_dump(mode="json"),
+                **payload.model_dump(mode="json", exclude={"client_id"}),
                 "client_id": str(current_user.id),
             }
         )

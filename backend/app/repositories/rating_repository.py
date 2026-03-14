@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.integrations.supabase import supabase
+from app.dependencies.supabase import supabase
 
 
 class RatingRepository:

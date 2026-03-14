@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.schemas.schemas import MasterRankingRead
+from app.schemas import MasterRankingRead
 from app.services.master_service import MasterService
 
 

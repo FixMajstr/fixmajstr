@@ -3,13 +3,13 @@ from app.schemas.common_db import MasterCreate
 from fastapi import HTTPException, Response
 from supabase import Client
 from app.core.common import Role
-from app.repositories.master_repository import MastersRepository
+from app.repositories.master_repository import MasterRepository
 
 
 class UserService:
     def __init__(self, supabase: Client):
         self.supabase = supabase
-        self._master_repo = MastersRepository()
+        self._master_repo = MasterRepository()
 
     def _set_refresh_cookie(self, response: Response, refresh_token: str) -> None:
         response.set_cookie(

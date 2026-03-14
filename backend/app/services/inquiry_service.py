@@ -1,5 +1,5 @@
 from app.repositories.inquiries_repository import InquiriesRepository
-from app.repositories.master_repository import MastersRepository
+from app.repositories.master_repository import MasterRepository
 from app.schemas import InquiryCreate, InquiryResponse, InquiryListResponse, InquiryStatusUpdate, InquiryUpdate
 from app.schemas.common_io import MessageResponse
 from app.schemas import CurrentUser
@@ -12,7 +12,7 @@ from datetime import datetime
 class InquiryService:
     def __init__(self):
         self.repository = InquiriesRepository()
-        self.masters_repository = MastersRepository()
+        self.masters_repository = MasterRepository()
 
     def create_inquiry(self, inquiry_data: InquiryCreate, current_user: CurrentUser) -> Dict[str, Any]:
         """Create a new inquiry from a client to a master"""

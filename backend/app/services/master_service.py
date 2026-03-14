@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.repositories.master_repository import MasterRepository
 from app.repositories.rating_repository import RatingRepository
-from app.schemas.schemas import MasterRankingRead
+from app.schemas import MasterRankingRead
 
 
 class MasterService:
@@ -64,7 +64,7 @@ class MasterService:
         return ranked_masters
 
     def master_exists(self, master_id: UUID) -> bool:
-        return bool(self.master_repository.get_master_by_id(master_id))
+        return bool(self.master_repository.get_by_id(master_id))
 
     @staticmethod
     def _parse_response_time_hours(response_time: Optional[str]) -> Optional[float]:
