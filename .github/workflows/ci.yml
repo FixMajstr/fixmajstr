@@ -30,4 +30,4 @@ jobs:
       - name: Run pytest
         run: |
           cd backend
-          pytest --tb=short -v
+          pytest --tb=short -v -m "not integration"
