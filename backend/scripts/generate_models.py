@@ -263,9 +263,6 @@ def render_model(table: Table) -> tuple[str, set[str]]:
             annotation = py_type
             assignment = ""
 
-            if default_value is not None:
-                assignment = f" = {default_value}"
-
         lines.append(f"    {col.name}: {annotation}{assignment}")
 
     return "\n".join(lines), needed_imports

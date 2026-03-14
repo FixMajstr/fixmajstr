@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
 
 class MessageResponse(BaseModel):
@@ -54,3 +55,22 @@ class CurrentUser(BaseModel):
     phone: str | None = None
     full_name: str | None = None
     avatar_url: str | None = None
+
+
+class InquiryResponse(BaseModel):
+    id: UUID
+    created_at: datetime
+    client_id: UUID
+    master_id: UUID
+    message: Optional[str] = None
+    status: Optional[str] = None
+    response: Optional[str] = None
+
+
+class InquiryListResponse(BaseModel):
+    inquiries: List[InquiryResponse]
+    total: int
+
+
+class InquiryStatusUpdate(BaseModel):
+    status: str

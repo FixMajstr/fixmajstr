@@ -28,10 +28,9 @@ class CategoryRead(CategoryBase):
 
 class MasterBase(BaseModel):
     user_id: UUID
-    category_id: Optional[UUID] = None
     description: Optional[str] = None
-    location: Optional[str] = None
-    avg_rating: Optional[float] = None
+    location: str
+    avg_rating: float = 0
     response_time: Optional[str] = None
 
 
@@ -40,10 +39,8 @@ class MasterCreate(MasterBase):
 
 
 class MasterUpdate(BaseModel):
-    category_id: Optional[UUID] = None
     description: Optional[str] = None
     location: Optional[str] = None
-    avg_rating: Optional[float] = None
     response_time: Optional[str] = None
 
 

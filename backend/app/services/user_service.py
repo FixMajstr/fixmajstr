@@ -1,12 +1,15 @@
 from app.schemas import CurrentUser, UserLogin
+from app.schemas.common_db import MasterCreate
 from fastapi import HTTPException, Response
 from supabase import Client
 from app.core.common import Role
+from app.repositories.master_repository import MastersRepository
 
 
 class UserService:
     def __init__(self, supabase: Client):
         self.supabase = supabase
+        self._master_repo = MastersRepository()
 
     def _set_refresh_cookie(self, response: Response, refresh_token: str) -> None:
         response.set_cookie(
@@ -77,8 +80,18 @@ class UserService:
         if not auth_response.user:
             raise HTTPException(status_code=400, detail="Failed to register user")
 
-        if (role == Role.MASTER.value) and auth_response.user:
-            pass  # TODO: Here we should create a new master in our master repository.
+        print(role)
+        if role == Role.MASTER:
+            print("Creating master profile for user", auth_response.user.id)
+            self._master_repo.create(
+                payload=MasterCreate(
+                    user_id=auth_response.user.id,
+                    location="",
+                    description="",
+                    avg_rating=0.0,
+                    response_time="",
+                )
+            )
 
         return {
             "message": "User registered!",

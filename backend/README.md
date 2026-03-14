@@ -627,6 +627,343 @@ Business logika v `Service` sloju se izvede samo, če uporabnik uspešno prestan
 
 ---
 
+# Testing
+
+Ta sekcija opisuje, kako poganjati teste v projektu, kako so testi organizirani in na kaj je treba paziti pri testih, ki uporabljajo pravi Supabase backend.
+
+---
+
+## Namen testov
+
+V projektu uporabljamo dve osnovni vrsti testov:
+
+### Unit testi
+
+Unit testi preverjajo posamezne funkcije ali razrede ločeno od zunanjih sistemov.
+
+Pri teh testih običajno:
+
+- mockamo klice na Supabase
+- preverjamo business logiko v service layerju
+- preverjamo, da repository pravilno kliče query chain
+
+Unit testi naj bodo:
+
+- hitri
+- neodvisni od interneta
+- ponovljivi
+
+---
+
+### Integration testi
+
+Integration testi preverjajo delovanje z dejansko bazo oziroma z realnim Supabase okoljem.
+
+Pri teh testih običajno:
+
+- ustvarimo testnega uporabnika
+- ustvarimo zapis v bazi
+- preverimo branje, posodobitev in brisanje
+- na koncu pobrišemo testne podatke
+
+Integration testi so počasnejši, vendar preverijo, da celoten flow res deluje:
+
+```text
+Repository -> Supabase -> Database
+```
+
+---
+
+## Struktura testov
+
+Priporočena struktura testov:
+
+```text
+test/
+├── conftest.py
+├── repositories/
+│   ├── test_master_repository.py
+│   ├── test_inquiries_repository.py
+│   └── ...
+├── services/
+│   └── ...
+└── api/
+    └── ...
+```
+
+### Pomen map
+
+- `test/repositories/` vsebuje teste repository layerja
+- `test/services/` vsebuje teste service layerja
+- `test/api/` vsebuje teste endpointov
+- `test/conftest.py` vsebuje skupno konfiguracijo za pytest
+
+---
+
+## Konfiguracija pytest
+
+V root mapi projekta dodamo datoteko `pytest.ini`.
+
+Primer:
+
+```ini
+[pytest]
+testpaths = test
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+markers =
+    integration: tests that hit the real Supabase backend
+
+filterwarnings =
+    ignore:The 'timeout' parameter is deprecated.*:DeprecationWarning
+    ignore:The 'verify' parameter is deprecated.*:DeprecationWarning
+```
+
+To omogoča:
+
+- da pytest ve, kje išče teste
+- da prepozna `@pytest.mark.integration`
+- da skrijemo nepomembna opozorila iz knjižnice Supabase
+
+---
+
+## conftest.py
+
+Če pytest ne najde `app` modula, lahko v `test/conftest.py` dodamo root mapo projekta v Python path.
+
+Primer:
+
+```python
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR))
+```
+
+To omogoča importe, kot na primer:
+
+```python
+from app.repositories.master_repository import MastersRepository
+```
+
+---
+
+## Zagon testov
+
+### Zagon vseh testov
+
+```bash
+pytest -v
+```
+
+### Zagon samo integration testov
+
+```bash
+pytest -m integration -v
+```
+
+### Zagon vseh testov razen integration
+
+```bash
+pytest -m "not integration" -v
+```
+
+### Zagon posamezne datoteke
+
+```bash
+pytest test/repositories/test_master_repository.py -v
+```
+
+### Zagon posameznega testa
+
+```bash
+pytest test/repositories/test_master_repository.py::test_masters_repository_crud_with_real_supabase -v
+```
+
+---
+
+## Zahteve za integration teste
+
+Ker integration testi uporabljajo pravi Supabase backend, morajo biti pravilno nastavljene okoljske spremenljivke.
+
+Primer v `.env` datoteki:
+
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_service_role_key
+```
+
+### Pomembno
+
+Za integration teste običajno potrebujemo `service role` ključ, ne samo anon ključ.
+
+Razlog:
+
+- ustvarjanje uporabnikov v `auth.users`
+- brisanje uporabnikov po testu
+- izvajanje insert/update/delete operacij, če je vklopljen RLS
+
+Če uporabljamo anon key in so politike stroge, bodo integration testi lahko padli zaradi `401`, `403` ali zaradi RLS omejitev.
+
+---
+
+## Priporočilo za testno okolje
+
+Priporočeno je, da integration testov ne poganjamo proti produkcijski bazi.
+
+Najboljša praksa je uporaba:
+
+- ločenega Supabase projekta za development/test
+  ali
+- ločene testne sheme in testnih podatkov
+
+Tako se izognemo:
+
+- onesnaževanju produkcijskih podatkov
+- testnim uporabnikom v produkciji
+- nenamernemu brisanju pravih zapisov
+
+---
+
+## Cleanup testnih podatkov
+
+Vsak integration test mora za sabo pobrisati podatke, ki jih ustvari.
+
+To običajno pomeni:
+
+- pobrisati zapis v public tabeli
+- pobrisati testnega uporabnika iz `auth.users`
+
+Priporočeno je uporabiti `try/finally`, da cleanup teče tudi, če test pade.
+
+Primer:
+
+```python
+try:
+    # create test data
+    pass
+finally:
+    # cleanup test data
+    pass
+```
+
+---
+
+## Primer vrste testov po layerjih
+
+### Repository testi
+
+Preverjajo:
+
+- create
+- get by id
+- list/get all
+- update
+- delete
+
+### Service testi
+
+Preverjajo:
+
+- validacijo poslovne logike
+- preverjanje pogojev
+- pravilno reakcijo na manjkajoče podatke
+- pretvorbo rezultatov v schema modele
+
+### API testi
+
+Preverjajo:
+
+- HTTP status kode
+- response modele
+- validacijo request bodyjev
+- protected route dostop
+- role-based dostop
+
+---
+
+## Protected route testi
+
+Pri testiranju zaščitenih endpointov preverjamo vsaj naslednje scenarije:
+
+### Authentication
+
+- brez tokena vrne `401 Unauthorized`
+- z neveljavnim tokenom vrne `401 Unauthorized`
+- z veljavnim tokenom endpoint deluje
+
+### Authorization
+
+- uporabnik brez ustrezne role dobi `403 Forbidden`
+- uporabnik z ustrezno role dobi pravilen response
+
+---
+
+## Primer razvojnega workflowa
+
+Priporočen workflow pri dodajanju nove funkcionalnosti:
+
+1. dodamo schema modele
+2. implementiramo repository
+3. napišemo repository test
+4. implementiramo service
+5. napišemo service test
+6. implementiramo route
+7. napišemo API test
+
+Tako imamo test coverage čez celoten flow:
+
+```text
+Route -> Service -> Repository -> Database
+```
+
+---
+
+## Dodatne odvisnosti za testiranje
+
+Če še niso nameščene, priporočamo vsaj:
+
+```bash
+pip install pytest
+```
+
+Če želimo posodobiti `requirements.txt`:
+
+```bash
+pip freeze > requirements.txt
+```
+
+Če bo projekt kasneje uporabljal več mockanja ali async testov, lahko po potrebi dodamo še dodatne testing knjižnice.
+
+---
+
+## Povzetek
+
+Za testiranje uporabljamo:
+
+- **unit teste** za hitro preverjanje logike
+- **integration teste** za preverjanje prave povezave s Supabase
+
+Osnovni ukazi:
+
+```bash
+pytest -v
+pytest -m integration -v
+pytest -m "not integration" -v
+```
+
+Pomembno:
+
+- testi naj tečejo na development/test okolju
+- integration testi naj vedno čistijo podatke za sabo
+- `pytest.ini` naj vsebuje registracijo custom markov
+- `conftest.py` lahko reši import path težave
+
+---
+
 # Development
 
 Ta sekcija opisuje, kako lokalno zagnati backend za razvoj.
