@@ -89,14 +89,10 @@ export const registerMajstr = async (fullName, email, password) => {
 };
 
 export const getMajstrProfile = async (masterId) => {
-  // TODO
-  throw new Error("Endpoint not implemented");
+  const response = await api.get(`/masters/${masterId}`);
+  return response.data;
 };
 
-export const getMajstrPastWork = async (masterId) => {
-  // TODO
-  throw new Error("Endpoint not implemented");
-};
 
 export const getMajstrRatings = async (masterId) => {
   // TODO

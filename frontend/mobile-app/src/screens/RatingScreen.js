@@ -16,18 +16,17 @@ import { submitRating } from '../services/api';
 import { colors } from '../theme';
 import { fonts } from '../theme';
 
-// MOCK — route.params.master 
+// MOCK DATA — remove once navigation always passes master from MajstrProfileScreen
 const MOCK_MASTER = {
   id: 'mock-uuid',
+  full_name: 'Peter Majster',
   avg_rating: 4,
-  user: {
-    full_name: 'Peter Majster',
-    avatar_url: 'https://static.wikia.nocookie.net/rage-guy/images/f/f9/Spodermen.gif/revision/latest/scale-to-width-down/1200?cb=20250115154335',
-  },
-  category: { name: 'Gozdar' },
+  avatar_url: null,
+  services: ['Vodovodne inštalacije', 'Ogrevanje'],
 };
 
 export default function RatingScreen({ navigation, route }) {
+  // master is always passed from MajstrProfileScreen via navigation.navigate("RatingScreen", { master })
   const master = route.params?.master ?? MOCK_MASTER;
 
   const [score, setScore] = useState(0);
@@ -82,19 +81,19 @@ export default function RatingScreen({ navigation, route }) {
         </LinearGradient>
         <View style={styles.masterCard}>
           <View style={styles.cardAvatarContainer}>
-            {master.user.avatar_url ? (
-              <Image source={{ uri: master.user.avatar_url }} style={styles.cardAvatar} />
+            {master.avatar_url ? (
+              <Image source={{ uri: master.avatar_url }} style={styles.cardAvatar} />
             ) : (
               <View style={styles.cardAvatarEmpty}>
                 <Text style={styles.cardAvatarEmptyText}>
-                  {master.user.full_name.charAt(0)}
+                  {master.full_name?.charAt(0) ?? '?'}
                 </Text>
               </View>
             )}
           </View>
           <View style={styles.cardInfo}>
-            <Text style={styles.cardName}>{master.user.full_name}</Text>
-            <Text style={styles.cardCategory}>{master.category?.name}</Text>
+            <Text style={styles.cardName}>{master.full_name}</Text>
+            <Text style={styles.cardCategory}>{master.services?.join(', ')}</Text>
           </View>
           <View style={styles.cardRating}>
             <Text style={styles.cardRatingNumber}>
