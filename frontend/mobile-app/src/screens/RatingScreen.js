@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 import { submitRating } from '../services/api';
 import { colors } from '../theme';
 import { fonts } from '../theme';
@@ -42,9 +43,10 @@ export default function RatingScreen({ navigation, route }) {
     try {
       setLoading(true);
       setError(null);
-      // TODO: 'current-user-uuid' auth context
+      // TODO: submitRating endpoint not yet implemented
+      const clientId = await SecureStore.getItemAsync('user_id');
       await submitRating({
-        clientId: 'current-user-uuid',
+        clientId,
         masterId: master.id,
         score,
         comment: comment.trim() || null,

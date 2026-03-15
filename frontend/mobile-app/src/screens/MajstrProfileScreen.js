@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as SecureStore from "expo-secure-store";
 import { getMajstrProfile } from "../services/api";
 import { colors } from "../theme";
 import { fonts } from "../theme";
@@ -54,12 +55,15 @@ export default function MajstrProfileScreen({ navigation, route }) {
     }
   }, [masterId]);
 
-  //FM 103:
-  // isMaster is set to true when the logged-in user is the master being viewed.
-  // TODO: replace with real role check once auth context is wired.
-  const [isMaster, setIsMaster] = React.useState(
-    route.params?.isMaster ?? false,
-  );
+  // FM-103: true when the logged-in user is the master being viewed
+  const [isMaster, setIsMaster] = React.useState(false);
+  React.useEffect(() => {
+    SecureStore.getItemAsync("user_id").then((userId) => {
+      if (userId && master?.user_id) {
+        setIsMaster(userId === master.user_id);
+      }
+    });
+  }, [master?.user_id]);
 
   if (loading) {
     return (
@@ -221,17 +225,7 @@ export default function MajstrProfileScreen({ navigation, route }) {
             <Text style={styles.secondaryButtonText}>Oceni mojstra</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => setIsMaster((prev) => !prev)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.secondaryButtonText}>
-              {isMaster ? "Preklopi na stranko" : "Preklopi na mojstra"}
-            </Text>
-          </TouchableOpacity>
-
-          {/*FM 103: Only shown ko the logged-in user IS this master */}
+          {/*FM 103: Only shown when the logged-in user IS this master */}
           {isMaster && (
             <TouchableOpacity
               style={styles.secondaryButton}
