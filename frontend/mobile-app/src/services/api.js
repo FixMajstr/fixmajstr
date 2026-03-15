@@ -11,6 +11,7 @@ const getBaseUrl = () => {
 
 const API_URL = getBaseUrl();
 
+
 const api = axios.create({
   baseURL: API_URL,
   timeout: 5000,
@@ -32,6 +33,33 @@ export const loginUser = async (email, password) => {
     return response.data;
   } catch (error) {
     console.error('Login failed:', error);
+    throw error;
+  }
+};
+
+export const searchMasters = async ({
+  query = null,
+  category = null,
+  location = null,
+  min_rating = null,
+  limit = 20,
+  offset = 0,
+} = {}) => {
+  try {
+    const response = await api.get('/masters/search', {
+      params: {
+        query,
+        category,
+        location,
+        min_rating,
+        limit,
+        offset,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Search masters failed:', error);
     throw error;
   }
 };

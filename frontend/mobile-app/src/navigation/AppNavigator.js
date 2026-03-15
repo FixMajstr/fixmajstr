@@ -5,9 +5,9 @@ import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterUserScreen from '../screens/RegisterUserScreen';
 import RegisterMajstrScreen from '../screens/RegisterMajstrScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createNativeStackNavigator();
-
 
 const SearchPlaceholder = () => null;
 const ProfilePlaceholder = () => null;
@@ -17,12 +17,12 @@ const RatingsPlaceholder = () => null;
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName="Search">
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="RegisterUser" component={RegisterUserScreen} />
         <Stack.Screen name="RegisterMajstr" component={RegisterMajstrScreen} />
-        <Stack.Screen name="Search" component={SearchPlaceholder} />
+        <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="Profile" component={ProfilePlaceholder} />
         <Stack.Screen name="Inquiries" component={InquiriesPlaceholder} />
         <Stack.Screen name="Ratings" component={RatingsPlaceholder} />
