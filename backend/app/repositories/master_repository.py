@@ -116,9 +116,19 @@ class MastersRepository:
 
         masters = data_result.data or []
 
-        # Enrich each master with user metadata from auth.users
         for master in masters:
             master["_user"] = self._get_user_metadata(master["user_id"])
+            svc_result = (
+                supabase.table("master_services")
+                .select("services(name)")
+                .eq("master_id", str(master["id"]))
+                .execute()
+            )
+            master["_services"] = [
+                row["services"]["name"]
+                for row in (svc_result.data or [])
+                if row.get("services") and row["services"].get("name")
+            ]
 
         return masters, total
 
