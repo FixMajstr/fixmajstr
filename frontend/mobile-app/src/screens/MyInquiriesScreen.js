@@ -44,7 +44,7 @@ function InquiryItem({ item, expanded, onToggle }) {
       onPress={onToggle}
       activeOpacity={0.75}
     >
-      {/* Row: preview + badge + date */}
+      {/* Row */}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Text

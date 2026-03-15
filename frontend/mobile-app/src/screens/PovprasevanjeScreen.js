@@ -16,14 +16,30 @@ import { submitInquiry } from "../services/api";
 import { colors } from "../theme";
 import { fonts } from "../theme";
 
+function parseApiError(err) {
+  if (!err.response) return "Napaka v omrežju. Preverite internetno povezavo.";
+  switch (err.response.status) {
+    case 401:
+      return "Seja je potekla. Prijavite se ponovno.";
+    case 403:
+      return "Nimate dovoljenja za to dejanje.";
+    case 409:
+      return "Povpraševanje za tega mojstra že obstaja.";
+    case 422:
+      return "Neveljavni podatki. Preverite vnos.";
+    default:
+      return `Napaka (${err.response.status}). Poskusite znova.`;
+  }
+}
+
 export default function PovprasevanjeScreen({ navigation, route }) {
   const master = route.params?.master ?? null;
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
-  // Defensive: if navigated here without a master (e.g. directly from HomeScreen)
   if (!master) {
     return (
       <SafeAreaView style={styles.mainWrapper} edges={["bottom"]}>
@@ -44,23 +60,31 @@ export default function PovprasevanjeScreen({ navigation, route }) {
   }
 
   const handleSubmit = async () => {
-    if (!message.trim()) {
+    if (loading || submitted) return;
+    const trimmed = message.trim();
+    if (!trimmed) {
       setError("Prosimo, opišite vašo težavo.");
       return;
     }
+    if (trimmed.length < 5) {
+      setError("Sporočilo mora vsebovati vsaj 5 znakov.");
+      return;
+    }
     setError(null);
+    setSubmitted(true);
     setLoading(true);
     try {
       const result = await submitInquiry({
         master_id: master.id,
-        message: message.trim(),
+        message: trimmed,
       });
       navigation.navigate("InquirySuccess", {
         status: result.inquiry.status,
         message: result.inquiry.message,
       });
     } catch (err) {
-      setError("Napaka pri pošiljanju: " + err.message);
+      setSubmitted(false);
+      setError(parseApiError(err));
     } finally {
       setLoading(false);
     }
@@ -74,7 +98,7 @@ export default function PovprasevanjeScreen({ navigation, route }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero header – matches MajstrProfileScreen/RatingScreen pattern */}
+        {/* Hero header*/}
         <LinearGradient
           colors={[colors.primaryLightA, "rgba(124,159,255,0.2)", colors.white]}
           style={styles.hero}
@@ -105,7 +129,7 @@ export default function PovprasevanjeScreen({ navigation, route }) {
           </View>
         </LinearGradient>
 
-        {/* Master name context */}
+        {/* Master name  */}
         <View style={styles.masterContext}>
           <Text style={styles.screenLabel}>POVPRAŠEVANJE</Text>
           <Text style={styles.masterName}>
@@ -130,8 +154,6 @@ export default function PovprasevanjeScreen({ navigation, route }) {
             textAlignVertical="top"
           />
 
-          {/* Dodanti fields can be added here (npr. category, urgency, photos…) */}
-
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           {loading ? (
@@ -142,8 +164,12 @@ export default function PovprasevanjeScreen({ navigation, route }) {
             />
           ) : (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[
+                styles.primaryButton,
+                (loading || submitted) && { opacity: 0.5 },
+              ]}
               onPress={handleSubmit}
+              disabled={loading || submitted}
               activeOpacity={0.8}
             >
               <Text style={styles.primaryButtonText}>POŠLJI POVPRAŠEVANJE</Text>

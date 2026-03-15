@@ -14,6 +14,24 @@ import { getReceivedInquiries, updateInquiryStatus } from "../services/api";
 import { colors } from "../theme";
 import { fonts } from "../theme";
 
+function parseApiError(err) {
+  if (!err.response) return "Napaka v omrežju. Preverite internetno povezavo.";
+  switch (err.response.status) {
+    case 401:
+      return "Seja je potekla. Prijavite se ponovno.";
+    case 403:
+      return "Nimate dovoljenja za to dejanje.";
+    case 409:
+      return "Povpraševanje je bilo že obdelano.";
+    case 422:
+      return "Neveljavni podatki.";
+    default:
+      return `Napaka (${err.response.status}). Poskusite znova.`;
+  }
+}
+
+const VALID_STATUSES = ["accepted", "rejected"];
+
 const STATUS_CONFIG = {
   pending: { label: "V ČAKANJU", color: colors.textLight },
   accepted: { label: "SPREJETO", color: "#4caf50" },
@@ -34,11 +52,16 @@ function InquiryItem({ item, expanded, onToggle, onStatusUpdate }) {
   const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
   const isPending = item.status === "pending";
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const handleAction = async (newStatus) => {
+    if (!VALID_STATUSES.includes(newStatus)) return;
+    setActionError(null);
     setActionLoading(true);
     try {
       await onStatusUpdate(item.id, newStatus);
+    } catch (err) {
+      setActionError(parseApiError(err));
     } finally {
       setActionLoading(false);
     }
@@ -50,7 +73,7 @@ function InquiryItem({ item, expanded, onToggle, onStatusUpdate }) {
       onPress={onToggle}
       activeOpacity={0.75}
     >
-      {/* Row: preview + badge + date */}
+      {/* Row */}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Text
@@ -66,7 +89,7 @@ function InquiryItem({ item, expanded, onToggle, onStatusUpdate }) {
         </View>
       </View>
 
-      {/* Expanded: approve / deny actions (only za pending) */}
+      {/* Expanded: approve / deny actions */}
       {expanded && isPending && (
         <View style={styles.actions}>
           {actionLoading ? (
@@ -76,6 +99,7 @@ function InquiryItem({ item, expanded, onToggle, onStatusUpdate }) {
               <TouchableOpacity
                 style={[styles.actionBtn, styles.acceptBtn]}
                 onPress={() => handleAction("accepted")}
+                disabled={actionLoading}
                 activeOpacity={0.8}
               >
                 <Text style={styles.actionBtnText}>SPREJMI</Text>
@@ -83,12 +107,16 @@ function InquiryItem({ item, expanded, onToggle, onStatusUpdate }) {
               <TouchableOpacity
                 style={[styles.actionBtn, styles.rejectBtn]}
                 onPress={() => handleAction("rejected")}
+                disabled={actionLoading}
                 activeOpacity={0.8}
               >
                 <Text style={styles.actionBtnText}>ZAVRNI</Text>
               </TouchableOpacity>
             </>
           )}
+          {actionError ? (
+            <Text style={styles.actionError}>{actionError}</Text>
+          ) : null}
         </View>
       )}
     </TouchableOpacity>
@@ -125,8 +153,9 @@ export default function ReceivedInquiriesScreen() {
     setExpandedId((prev) => (prev === id ? null : id));
 
   const handleStatusUpdate = async (id, status) => {
+    if (!VALID_STATUSES.includes(status)) return;
     await updateInquiryStatus(id, status);
-    //Update local state so the badge and actions reflect immediately
+
     setInquiries((prev) =>
       prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)),
     );
@@ -281,5 +310,13 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: "center",
     marginTop: 60,
+  },
+  actionError: {
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    color: colors.error,
+    marginTop: 8,
+    textAlign: "center",
+    width: "100%",
   },
 });

@@ -1,5 +1,6 @@
 import axios from "axios";
 import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
 
 const getBaseUrl = () => {
   const host = Constants.expoConfig?.hostUri?.split(":").shift();
@@ -16,20 +17,14 @@ const api = axios.create({
   timeout: 5000,
 });
 
-//TODO FM-AUTH: Temporary in-memory auth store
-// ReplacAT with AuthContext + expo-secure-store before merging to dev!!!
-// Te variables live only for the current JS session
-let _authToken = null;
-let _currentUserId = null;
-export const setAuthSession = (token, userId) => {
-  _authToken = token;
-  _currentUserId = String(userId);
-};
-export const clearAuthSession = () => {
-  _authToken = null;
-  _currentUserId = null;
-};
-const _authHeader = () => ({ Authorization: `Bearer ${_authToken}` });
+// FM-102
+api.interceptors.request.use(async (config) => {
+  const token = await SecureStore.getItemAsync("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const testApiConnection = async () => {
   try {
@@ -44,13 +39,51 @@ export const testApiConnection = async () => {
 export const loginUser = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
-    // TODO FM-AUTH: temporary- auto-save token to in-memory store until AuthContext je  wired
+
     if (response.data?.access_token && response.data?.user_id) {
-      setAuthSession(response.data.access_token, response.data.user_id);
+      await SecureStore.setItemAsync(
+        "access_token",
+        response.data.access_token,
+      );
+      await SecureStore.setItemAsync("user_id", String(response.data.user_id));
     }
     return response.data;
   } catch (error) {
     console.error("Login failed:", error);
+    throw error;
+  }
+};
+
+export const registerUser = async (fullName, email, password) => {
+  try {
+    const response = await api.post("/auth/register", {
+      full_name: fullName,
+      email,
+      password,
+      role: "client",
+      phone: null,
+      avatar_url: null,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Register failed:", error);
+    throw error;
+  }
+};
+
+export const registerMajstr = async (fullName, email, password) => {
+  try {
+    const response = await api.post("/auth/register-master", {
+      full_name: fullName,
+      email,
+      password,
+      role: "master",
+      phone: null,
+      avatar_url: null,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Register failed:", error);
     throw error;
   }
 };
@@ -75,42 +108,38 @@ export const submitRating = async ({ masterId, clientId, score, comment }) => {
   throw new Error("Endpoint not implemented");
 };
 
-// FM-102: Submit a new inquiry
+// FM-102
 export const submitInquiry = async ({ master_id, message }) => {
-  if (!_authToken) {
+  const token = await SecureStore.getItemAsync("access_token");
+  if (!token) {
     throw new Error("Ni prijavljenega uporabnika. Prijavite se najprej.");
   }
-  const response = await api.post(
-    "/inquiries/",
-    { client_id: _currentUserId, master_id, message },
-    { headers: _authHeader() },
-  );
+  const userId = await SecureStore.getItemAsync("user_id");
+  const response = await api.post("/inquiries/", {
+    client_id: userId,
+    master_id,
+    message,
+  });
   return response.data;
 };
 
-// FM-102: Get inquiries sent by the logged-in client
+// FM-102
 export const getMyInquiries = async () => {
-  const response = await api.get("/inquiries/my-inquiries", {
-    headers: _authHeader(),
-  });
+  const response = await api.get("/inquiries/my-inquiries");
   return response.data;
 };
 
-// FM-102: Get inquiries received by the logged-in master
+// FM-102
 export const getReceivedInquiries = async () => {
-  const response = await api.get("/inquiries/received", {
-    headers: _authHeader(),
-  });
+  const response = await api.get("/inquiries/received");
   return response.data;
 };
 
-// FM-102: Update inquiry status
+// FM-102
 export const updateInquiryStatus = async (inquiryId, status) => {
-  const response = await api.patch(
-    `/inquiries/${inquiryId}/status`,
-    { status },
-    { headers: _authHeader() },
-  );
+  const response = await api.patch(`/inquiries/${inquiryId}/status`, {
+    status,
+  });
   return response.data;
 };
 

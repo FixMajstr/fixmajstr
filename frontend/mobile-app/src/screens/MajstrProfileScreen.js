@@ -221,7 +221,7 @@ export default function MajstrProfileScreen({ navigation, route }) {
             </Text>
           </TouchableOpacity>
 
-          {/*FM 103: Only shown when the logged-in user IS this master */}
+          {/*FM 103: Only shown ko the logged-in user IS this master */}
           {isMaster && (
             <TouchableOpacity
               style={styles.secondaryButton}

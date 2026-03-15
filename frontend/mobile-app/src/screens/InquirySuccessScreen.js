@@ -4,8 +4,6 @@ import { colors } from "../theme";
 import { fonts } from "../theme";
 
 export default function InquirySuccessScreen({ navigation }) {
-  //A new inquiry always starts as "pending".client checks status later
-  //via the My Inquiries screen. This screen only confirms submission.
   return (
     <View style={styles.container}>
       <Text style={styles.title}>POVPRAŠEVANJE POSLANO</Text>
