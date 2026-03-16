@@ -11,20 +11,23 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import logo from '../../assets/icon.png';
+import { Ionicons } from '@expo/vector-icons';
 import { searchMasters } from '../services/api';
 
-const CATEGORY_FILTERS = ['Mehanik', 'Pleskar', 'Vrtnar'];
-
-export default function SearchScreen() {
+export default function SearchScreen({ navigation }) {
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [ratingOrder, setRatingOrder] = useState('desc');
   const [masters, setMasters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const normalizedSearch = useMemo(() => searchText.trim(), [searchText]);
+  const normalizedCategory = useMemo(() => categoryFilter.trim(), [categoryFilter]);
+  const normalizedLocation = useMemo(() => locationFilter.trim(), [locationFilter]);
 
   const fetchMasters = async (params = {}, showInitialLoader = false) => {
     try {
@@ -40,12 +43,13 @@ export default function SearchScreen() {
         query: params.query ?? null,
         category: params.category ?? null,
         location: params.location ?? null,
-        min_rating: params.min_rating ?? null,
-        limit: 20,
+        min_rating: null,
+        limit: 50,
         offset: 0,
       });
 
-      setMasters(data?.masters || []);
+      const mastersFromApi = data?.masters || [];
+      setMasters(mastersFromApi);
     } catch (err) {
       const detail =
         err?.response?.data?.detail || err?.message || 'Napaka pri nalaganju mojstrov.';
@@ -65,43 +69,55 @@ export default function SearchScreen() {
     const timeout = setTimeout(() => {
       fetchMasters({
         query: normalizedSearch || null,
-        category: selectedFilter || null,
+        category: normalizedCategory || null,
+        location: normalizedLocation || null,
       });
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [normalizedSearch, selectedFilter]);
+  }, [normalizedSearch, normalizedCategory, normalizedLocation]);
 
-  const renderFilterChip = (filter) => {
-    const isActive = selectedFilter === filter;
+  const displayedMasters = useMemo(() => {
+    const sorted = [...masters].sort((a, b) => {
+      const ratingA = Number.isFinite(a?.avg_rating) ? a.avg_rating : 0;
+      const ratingB = Number.isFinite(b?.avg_rating) ? b.avg_rating : 0;
 
-    return (
-      <TouchableOpacity
-        key={filter}
-        style={[styles.filterChip, isActive && styles.filterChipActive]}
-        activeOpacity={0.85}
-        onPress={() => setSelectedFilter(isActive ? null : filter)}
-      >
-        <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-          {filter}
-        </Text>
-      </TouchableOpacity>
-    );
+      return ratingOrder === 'desc' ? ratingB - ratingA : ratingA - ratingB;
+    });
+
+    return sorted;
+  }, [masters, ratingOrder]);
+
+  const clearFilters = () => {
+    setCategoryFilter('');
+    setLocationFilter('');
+  };
+
+  const toggleRatingOrder = () => {
+    setRatingOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
   };
 
   const renderMasterCard = ({ item }) => {
-    const avatarSource = item?.avatar_url
-      ? { uri: item.avatar_url }
-      : { uri: 'https://via.placeholder.com/300x300.png?text=FixMajstr' };
+    const avatarSource =
+      item?.avatar_url?.trim()
+        ? { uri: item.avatar_url }
+        : { uri: 'https://via.placeholder.com/200x200.png?text=FixMajstr' };
 
-    const servicesText =
-      Array.isArray(item?.services) && item.services.length > 0
+    const descriptionText =
+      item?.description?.trim() ||
+      (Array.isArray(item?.services) && item.services.length > 0
         ? item.services.join(', ')
-        : item?.description || 'Brez opisa';
+        : 'Brez opisa');
+
+    const displayName = item?.full_name?.trim() || 'Neznan mojster';
+    const displayLocation = item?.location?.trim() || 'Lokacija ni navedena';
+    const displayRating = Number.isFinite(item?.avg_rating)
+      ? Math.max(1, Math.min(5, Math.round(item.avg_rating)))
+      : 1;
 
     return (
       <LinearGradient
-        colors={['#AFC2FF', '#9EB5FA']}
+        colors={['#B7C9FF', '#8EA8F6']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -109,34 +125,22 @@ export default function SearchScreen() {
         <Image source={avatarSource} style={styles.avatar} />
 
         <View style={styles.cardContent}>
-          <Text style={styles.masterName}>
-            {item?.full_name || 'Neznan mojster'}
+          <Text style={styles.masterName} numberOfLines={1}>
+            {displayName}
           </Text>
 
           <Text style={styles.masterProfession} numberOfLines={2}>
-            {servicesText}
+            {descriptionText}
           </Text>
 
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>
-              {item?.location ? `📍 ${item.location}` : '📍 Lokacija ni navedena'}
-            </Text>
-            <Text style={styles.metaText}>
-              ⭐ {typeof item?.avg_rating === 'number' ? item.avg_rating.toFixed(1) : '0.0'}
-            </Text>
+            <Text style={styles.metaText}>📍 {displayLocation}</Text>
+            <Text style={styles.metaText}>⭐ {displayRating}</Text>
           </View>
 
           <View style={styles.cardActions}>
             <TouchableOpacity style={styles.moreButton} activeOpacity={0.85}>
               <Text style={styles.moreButtonText}>Več</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.iconButton} activeOpacity={0.85}>
-              <Text style={styles.iconButtonText}>✉</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.iconButton} activeOpacity={0.85}>
-              <Text style={styles.iconButtonText}>♡</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -158,23 +162,99 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation?.goBack?.()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={30} color="#2F3241" />
+          </TouchableOpacity>
+
           <Text style={styles.title}>Iskanje mojstra</Text>
-          <Image source={logo} style={styles.logo} resizeMode="contain" />
+
+          <View style={styles.rightPlaceholder} />
         </View>
 
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>⌕</Text>
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color="#4B4F5E"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Iskanje..."
-            placeholderTextColor="#6F7380"
+            placeholderTextColor="#4B4F5E"
             value={searchText}
             onChangeText={setSearchText}
           />
         </View>
 
-        <View style={styles.filtersRow}>{CATEGORY_FILTERS.map(renderFilterChip)}</View>
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={styles.filterButton}
+            activeOpacity={0.85}
+            onPress={() => setShowFilters((prev) => !prev)}
+          >
+            <Ionicons
+              name={showFilters ? 'options' : 'options-outline'}
+              size={16}
+              color="#FFFFFF"
+            />
+            <Text style={styles.filterButtonText}>Filtri</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.filterButton}
+            activeOpacity={0.85}
+            onPress={toggleRatingOrder}
+          >
+            <Ionicons
+              name={ratingOrder === 'desc' ? 'arrow-down' : 'arrow-up'}
+              size={16}
+              color="#FFFFFF"
+            />
+            <Text style={styles.filterButtonText}>
+              Rating {ratingOrder === 'desc' ? '5-1' : '1-5'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {showFilters && (
+          <View style={styles.filtersPanel}>
+            <View style={styles.filterBlock}>
+              <Text style={styles.filterLabel}>Kategorija</Text>
+              <TextInput
+                style={styles.filterInput}
+                placeholder="Vpiši kategorijo"
+                placeholderTextColor="#707487"
+                value={categoryFilter}
+                onChangeText={setCategoryFilter}
+              />
+            </View>
+
+            <View style={styles.filterBlock}>
+              <Text style={styles.filterLabel}>Lokacija</Text>
+              <TextInput
+                style={styles.filterInput}
+                placeholder="Vpiši lokacijo"
+                placeholderTextColor="#707487"
+                value={locationFilter}
+                onChangeText={setLocationFilter}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.clearButton}
+              activeOpacity={0.85}
+              onPress={clearFilters}
+            >
+              <Text style={styles.clearButtonText}>Počisti filtre</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {loading && (
           <View style={styles.inlineLoader}>
@@ -182,18 +262,18 @@ export default function SearchScreen() {
           </View>
         )}
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <FlatList
-          data={masters}
-          keyExtractor={(item) => item.id}
+          data={displayedMasters}
+          keyExtractor={(item, index) => (item?.id ? String(item.id) : String(index))}
           renderItem={renderMasterCard}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             !loading ? (
               <View style={styles.emptyWrapper}>
-                <Text style={styles.emptyText}>Ni rezultatov za izbrano iskanje.</Text>
+                <Text style={styles.emptyText}>Ni rezultatov za izbrane filtre.</Text>
               </View>
             ) : null
           }
@@ -206,74 +286,65 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: '#F3F3F3',
   },
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4',
-    paddingHorizontal: 18,
-    paddingTop: 10,
+    backgroundColor: '#F3F3F3',
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
-  loaderContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F4F4F4',
-  },
-  loaderText: {
-    marginTop: 12,
-    color: '#4A4F63',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inlineLoader: {
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  header: {
+  topBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 26,
+    minHeight: 44,
+  },
+  backButton: {
+    width: 36,
     alignItems: 'flex-start',
-    marginBottom: 22,
+    justifyContent: 'center',
+  },
+  rightPlaceholder: {
+    width: 36,
   },
   title: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: '#2E3038',
-    letterSpacing: -0.4,
-  },
-  logo: {
-    width: 46,
-    height: 46,
-    marginTop: -2,
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#313446',
   },
   searchBar: {
-    height: 46,
+    height: 40,
     backgroundColor: '#DADDE5',
-    borderRadius: 24,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    marginBottom: 16,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
   searchIcon: {
-    fontSize: 20,
-    color: '#666B78',
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     color: '#2E3038',
+    paddingVertical: 0,
   },
-  filtersRow: {
+  actionRow: {
     flexDirection: 'row',
-    marginBottom: 18,
+    alignItems: 'center',
+    marginBottom: 14,
   },
-  filterChip: {
-    backgroundColor: '#6E95FF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#5E88FF',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 18,
     marginRight: 10,
     shadowColor: '#000',
@@ -282,19 +353,54 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
-  filterChipActive: {
-    backgroundColor: '#275CED',
-  },
-  filterChipText: {
+  filterButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+    marginLeft: 6,
   },
-  filterChipTextActive: {
+  filtersPanel: {
+    backgroundColor: '#E8EBF5',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 18,
+  },
+  filterBlock: {
+    marginBottom: 12,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#34384A',
+    marginBottom: 6,
+  },
+  filterInput: {
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#2E3038',
+  },
+  clearButton: {
+    marginTop: 4,
+    backgroundColor: '#4B7CFF',
+    borderRadius: 16,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearButtonText: {
     color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  inlineLoader: {
+    marginBottom: 10,
+    alignItems: 'center',
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 22,
   },
   card: {
     borderRadius: 24,
@@ -304,73 +410,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 7,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
   },
   avatar: {
-    width: 102,
-    height: 102,
-    borderRadius: 51,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     backgroundColor: '#E5E5E5',
     marginRight: 16,
   },
   cardContent: {
     flex: 1,
     justifyContent: 'center',
+    paddingRight: 2,
   },
   masterName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#4A4F63',
+    fontSize: 19,
+    fontWeight: '600',
+    color: '#3B3E52',
     marginBottom: 4,
   },
   masterProfession: {
-    fontSize: 14,
-    color: '#4A4F63',
-    marginBottom: 12,
+    fontSize: 16,
+    color: '#3B3E52',
+    marginBottom: 10,
+    fontWeight: '400',
   },
   metaRow: {
     marginBottom: 14,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#4A4F63',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   moreButton: {
-    backgroundColor: '#497AFF',
+    backgroundColor: '#4B7CFF',
     borderRadius: 18,
-    minWidth: 56,
+    minWidth: 58,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 14,
-    marginRight: 10,
   },
   moreButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  iconButtonText: {
-    color: '#497AFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   emptyWrapper: {
     paddingTop: 40,
@@ -385,5 +478,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 10,
     textAlign: 'center',
+  },
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F3F3',
+  },
+  loaderText: {
+    marginTop: 12,
+    color: '#4A4F63',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
