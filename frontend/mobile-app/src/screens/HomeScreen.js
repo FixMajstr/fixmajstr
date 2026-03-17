@@ -6,13 +6,11 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
- 
-const { width, height } = Dimensions.get("window");
- 
+
 export default function WelcomeScreen({ navigation }) {
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoY = useRef(new Animated.Value(30)).current;
@@ -21,7 +19,9 @@ export default function WelcomeScreen({ navigation }) {
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const buttonY = useRef(new Animated.Value(20)).current;
   const decorOpacity = useRef(new Animated.Value(0)).current;
- 
+  const { width, height } = useWindowDimensions();
+  const isTablet = width >= 768;
+
   useEffect(() => {
     Animated.sequence([
       Animated.delay(200),
@@ -70,7 +70,7 @@ export default function WelcomeScreen({ navigation }) {
       ]),
     ]).start();
   }, []);
- 
+
   return (
     <LinearGradient
       colors={["#7C9FFF", "#497AFF", "#275CED"]}
@@ -78,12 +78,47 @@ export default function WelcomeScreen({ navigation }) {
       end={{ x: 0.7, y: 1 }}
       style={styles.container}
     >
-      <Animated.View style={[styles.decorCircleLarge, { opacity: decorOpacity }]} />
-      <Animated.View style={[styles.decorCircleSmall, { opacity: decorOpacity }]} />
-      <Animated.View style={[styles.decorCircleMedium, { opacity: decorOpacity }]} />
- 
+      <Animated.View
+        style={[
+          styles.decorCircleLarge,
+          {
+            opacity: decorOpacity,
+            width: width * 1.1,
+            height: width * 1.1,
+            borderRadius: width * 0.55,
+            top: -width * 0.45,
+            left: -width * 0.05,
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.decorCircleSmall,
+          {
+            opacity: decorOpacity,
+            width: width * 0.5,
+            height: width * 0.5,
+            borderRadius: width * 0.25,
+            bottom: height * 0.18,
+            right: -width * 0.15,
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.decorCircleMedium,
+          {
+            opacity: decorOpacity,
+            width: width * 0.7,
+            height: width * 0.7,
+            borderRadius: width * 0.35,
+            bottom: -width * 0.2,
+            left: -width * 0.2,
+          },
+        ]}
+      />
+
       <View style={styles.content}>
- 
         <Animated.View
           style={[
             styles.logoContainer,
@@ -92,50 +127,60 @@ export default function WelcomeScreen({ navigation }) {
         >
           <Image
             source={bigTextLogo}
-            style={{ width: width * 0.72, height: 70 }}
+            style={{
+              width: isTablet ? width * 0.5 : width * 0.72,
+              height: isTablet ? 110 : 70,
+            }}
             resizeMode="contain"
           />
         </Animated.View>
- 
+
         <Animated.View style={[styles.divider, { opacity: taglineOpacity }]} />
- 
+
         <Animated.Text
           style={[
             styles.tagline,
+            isTablet && styles.taglineTablet,
             { opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
           ]}
         >
           Mojster en klik vstran
         </Animated.Text>
- 
+
         <Animated.Text
           style={[
             styles.subtitle,
+            isTablet && styles.subtitleTablet,
             { opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
           ]}
         >
           Poišči zanesljivega strokovnjaka{"\n"}hitro in enostavno.
         </Animated.Text>
       </View>
- 
+
       <Animated.View
         style={[
           styles.bottomContainer,
+          isTablet && styles.bottomContainerTablet,
           { opacity: buttonOpacity, transform: [{ translateY: buttonY }] },
         ]}
       >
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, isTablet && styles.buttonTablet]}
           onPress={() => navigation.navigate("Login")}
           activeOpacity={0.85}
         >
-          <Text style={styles.buttonText}>Začni</Text>
+          <Text
+            style={[styles.buttonText, isTablet && styles.buttonTextTablet]}
+          >
+            Začni
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </LinearGradient>
   );
 }
- 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -148,30 +193,15 @@ const styles = StyleSheet.create({
   },
   decorCircleLarge: {
     position: "absolute",
-    width: width * 1.1,
-    height: width * 1.1,
-    borderRadius: width * 0.55,
     backgroundColor: "rgba(255,255,255,0.06)",
-    top: -width * 0.45,
-    left: -width * 0.05,
   },
   decorCircleSmall: {
     position: "absolute",
-    width: width * 0.5,
-    height: width * 0.5,
-    borderRadius: width * 0.25,
     backgroundColor: "rgba(255,255,255,0.07)",
-    bottom: height * 0.18,
-    right: -width * 0.15,
   },
   decorCircleMedium: {
     position: "absolute",
-    width: width * 0.7,
-    height: width * 0.7,
-    borderRadius: width * 0.35,
     backgroundColor: "rgba(255,255,255,0.05)",
-    bottom: -width * 0.2,
-    left: -width * 0.2,
   },
   content: {
     flex: 1,
@@ -198,6 +228,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "700",
   },
+  taglineTablet: {
+    fontSize: 32,
+  },
   subtitle: {
     fontFamily: "LeagueSpartan-Regular",
     fontSize: 15,
@@ -206,10 +239,17 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 4,
   },
+  subtitleTablet: {
+    fontSize: 20,
+    lineHeight: 30,
+  },
   bottomContainer: {
     width: "100%",
     alignItems: "center",
     gap: 16,
+  },
+  bottomContainerTablet: {
+    alignItems: "center",
   },
   button: {
     width: "100%",
@@ -224,11 +264,19 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  buttonTablet: {
+    width: 320,
+    height: 62,
+    borderRadius: 20,
+  },
   buttonText: {
     fontFamily: "LeagueSpartan-Bold",
     fontSize: 17,
     color: "#275CED",
     fontWeight: "800",
     letterSpacing: 1,
+  },
+  buttonTextTablet: {
+    fontSize: 20,
   },
 });

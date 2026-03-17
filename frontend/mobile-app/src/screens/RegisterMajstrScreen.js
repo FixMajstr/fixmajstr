@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAvoidingView, Platform } from "react-native";
@@ -23,6 +24,8 @@ export default function RegisterMajstrScreen({ navigation }) {
   const [oMeni, setOMeni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   const handleRegister = async () => {
     const nameRegex = /^[a-zA-ZčšžČŠŽ\s]{2,50}$/;
@@ -78,71 +81,108 @@ export default function RegisterMajstrScreen({ navigation }) {
       end={{ x: 0.5, y: 0.33 }}
       style={styles.container}
     >
-      <View style={styles.logoContainer}>
+      <View
+        style={[styles.logoContainer, isTablet && styles.logoContainerTablet]}
+      >
         <Image
           source={bigTextLogo}
-          style={{ width: "100%", height: 80 }}
+          style={{
+            width: isTablet ? 520 : "100%",
+            height: isTablet ? 140 : 80,
+          }}
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>Mojster en klik vstran</Text>
+        <Text style={[styles.logoText, isTablet && styles.logoTextTablet]}>
+          Mojster en klik vstran
+        </Text>
       </View>
+
       <KeyboardAvoidingView
         style={{ flex: 1, width: "100%" }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           style={{ width: "100%" }}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={[styles.card, isTablet && styles.cardTablet]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Registracija Mojstra</Text>
+          <Text style={[styles.title, isTablet && styles.titleTablet]}>
+            Registracija Mojstra
+          </Text>
 
           <View style={styles.formContainer}>
-            <Text style={styles.label}>Ime</Text>
-            <TextInput
-              style={styles.input}
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="none"
-            />
+            <View style={isTablet ? styles.rowFields : null}>
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Ime
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="none"
+                />
+              </View>
 
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Email
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
 
-            <Text style={styles.label}>Geslo</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-            />
+            <View style={isTablet ? styles.rowFields : null}>
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Geslo
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={true}
+                />
+              </View>
 
-            <Text style={styles.label}>Potrdi geslo</Text>
-            <TextInput
-              style={styles.input}
-              value={repeatPassword}
-              onChangeText={setRepeatPassword}
-              secureTextEntry={true}
-            />
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Potrdi geslo
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={repeatPassword}
+                  onChangeText={setRepeatPassword}
+                  secureTextEntry={true}
+                />
+              </View>
+            </View>
 
-            <Text style={styles.label}>Storitev</Text>
+            <Text style={[styles.label, isTablet && styles.labelTablet]}>
+              Storitev
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isTablet && styles.inputTablet]}
               value={storitev}
               onChangeText={setStoritev}
               autoCapitalize="none"
             />
 
-            <Text style={styles.label}>O meni</Text>
+            <Text style={[styles.label, isTablet && styles.labelTablet]}>
+              O meni
+            </Text>
             <TextInput
-              style={styles.inputMultiline}
+              style={[
+                styles.inputMultiline,
+                isTablet && styles.inputMultilineTablet,
+              ]}
               value={oMeni}
               onChangeText={setOMeni}
               multiline={true}
@@ -161,11 +201,21 @@ export default function RegisterMajstrScreen({ navigation }) {
             ) : (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={styles.buttonPrimary}
+                  style={[
+                    styles.buttonPrimary,
+                    isTablet && styles.buttonTablet,
+                  ]}
                   onPress={handleRegister}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.buttonPrimaryText}>Registriraj se</Text>
+                  <Text
+                    style={[
+                      styles.buttonPrimaryText,
+                      isTablet && styles.buttonTextTablet,
+                    ]}
+                  >
+                    Registriraj se
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -280,5 +330,52 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 10,
     textAlign: "center",
+  },
+  logoContainerTablet: {
+    marginBottom: 48,
+    marginTop: 40,
+  },
+  logoTextTablet: {
+    fontSize: 20,
+  },
+  cardTablet: {
+    maxWidth: 620,
+    alignSelf: "center",
+    borderRadius: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 48,
+    flexGrow: 0,
+  },
+  titleTablet: {
+    fontSize: 40,
+    marginBottom: 36,
+  },
+  rowFields: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  labelTablet: {
+    fontSize: 20,
+  },
+  inputTablet: {
+    height: 54,
+    fontSize: 17,
+    borderRadius: 12,
+  },
+  inputMultilineTablet: {
+    height: 150,
+    fontSize: 17,
+    borderRadius: 12,
+  },
+  buttonTablet: {
+    marginTop: 50,
+    marginBottom: -80,
+    height: 56,
+    borderRadius: 14,
+    width: 320,
+    alignSelf: "center",
+  },
+  buttonTextTablet: {
+    fontSize: 18,
   },
 });

@@ -14,12 +14,15 @@ import { loginUser } from "../services/api";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
 import * as SecureStore from "expo-secure-store";
+import { useWindowDimensions } from "react-native";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   const handleLogin = async () => {
     try {
@@ -43,13 +46,20 @@ export default function LoginScreen({ navigation }) {
       end={{ x: 0.5, y: 0.33 }}
       style={styles.container}
     >
-      <View style={styles.logoContainer}>
+      <View
+        style={[styles.logoContainer, isTablet && styles.logoContainerTablet]}
+      >
         <Image
           source={bigTextLogo}
-          style={{ width: "100%", height: 80 }}
+          style={{
+            width: isTablet ? 520 : "100%",
+            height: isTablet ? 160 : 80,
+          }}
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>Mojster en klik vstran</Text>
+        <Text style={[styles.logoText, isTablet && styles.logoTextTablet]}>
+          Mojster en klik vstran
+        </Text>
       </View>
 
       <KeyboardAvoidingView
@@ -58,29 +68,43 @@ export default function LoginScreen({ navigation }) {
       >
         <ScrollView
           style={{ width: "100%" }}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={[styles.card, isTablet && styles.cardTablet]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.loginTitle}>PRIJAVA</Text>
+          <Text
+            style={[styles.loginTitle, isTablet && styles.loginTitleTablet]}
+          >
+            PRIJAVA
+          </Text>
 
           <View style={styles.formContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <View style={isTablet ? styles.rowFields : null}>
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Email
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
 
-            <Text style={styles.label}>Geslo</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-            />
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Geslo
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={true}
+                />
+              </View>
+            </View>
 
             {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -93,30 +117,69 @@ export default function LoginScreen({ navigation }) {
             ) : (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={styles.buttonPrimary}
+                  style={[
+                    styles.buttonPrimary,
+                    isTablet && styles.buttonTablet,
+                  ]}
                   onPress={handleLogin}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.buttonPrimaryText}>Prijavi se</Text>
+                  <Text
+                    style={[
+                      styles.buttonPrimaryText,
+                      isTablet && styles.buttonTextTablet,
+                    ]}
+                  >
+                    Prijavi se
+                  </Text>
                 </TouchableOpacity>
 
-                <Text style={styles.dividerText}>ali se registriraj kot</Text>
-
-                <TouchableOpacity
-                  style={styles.buttonOutline}
-                  onPress={() => navigation.navigate("RegisterUser")}
-                  activeOpacity={0.85}
+                <Text
+                  style={[
+                    styles.dividerText,
+                    isTablet && styles.dividerTextTablet,
+                  ]}
                 >
-                  <Text style={styles.buttonOutlineText}>Uporabnik</Text>
-                </TouchableOpacity>
+                  ali se registriraj kot
+                </Text>
 
-                <TouchableOpacity
-                  style={styles.buttonOutline}
-                  onPress={() => navigation.navigate("RegisterMajstr")}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.buttonOutlineText}>Mojster</Text>
-                </TouchableOpacity>
+                <View style={isTablet ? styles.rowButtons : null}>
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonOutline,
+                      isTablet && styles.buttonOutlineTablet,
+                    ]}
+                    onPress={() => navigation.navigate("RegisterUser")}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonOutlineText,
+                        isTablet && styles.buttonTextTablet,
+                      ]}
+                    >
+                      Uporabnik
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonOutline,
+                      isTablet && styles.buttonOutlineTablet,
+                    ]}
+                    onPress={() => navigation.navigate("RegisterMajstr")}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonOutlineText,
+                        isTablet && styles.buttonTextTablet,
+                      ]}
+                    >
+                      Mojster
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
@@ -222,6 +285,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 48,
     borderRadius: 12,
+    marginBottom: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#497AFF",
@@ -239,5 +303,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 10,
     textAlign: "center",
+  },
+  logoContainerTablet: {
+    marginBottom: 48,
+    marginTop: 50,
+  },
+  logoTextTablet: {
+    fontSize: 20,
+  },
+  cardTablet: {
+    maxWidth: 560,
+    alignSelf: "center",
+    borderRadius: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 48,
+    flexGrow: 0,
+  },
+  loginTitleTablet: {
+    fontSize: 40,
+    marginBottom: 36,
+  },
+  rowFields: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  labelTablet: {
+    fontSize: 20,
+  },
+  inputTablet: {
+    height: 54,
+    fontSize: 17,
+    borderRadius: 12,
+  },
+  buttonTablet: {
+    height: 56,
+    borderRadius: 14,
+  },
+  rowButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  buttonOutlineTablet: {
+    flex: 1,
+    height: 56,
+    borderRadius: 14,
+  },
+  buttonTextTablet: {
+    fontSize: 18,
+  },
+  dividerTextTablet: {
+    fontSize: 18,
   },
 });
