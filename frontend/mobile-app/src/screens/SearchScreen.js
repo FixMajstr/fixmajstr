@@ -12,7 +12,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 import { searchMasters } from '../services/api';
+
+import { ROUTES } from '../navigation/routes';
 
 export default function SearchScreen({ navigation }) {
   const [searchText, setSearchText] = useState('');
@@ -24,6 +27,7 @@ export default function SearchScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   const normalizedSearch = useMemo(() => searchText.trim(), [searchText]);
   const normalizedCategory = useMemo(() => categoryFilter.trim(), [categoryFilter]);
@@ -62,6 +66,11 @@ export default function SearchScreen({ navigation }) {
   };
 
   useEffect(() => {
+    const checkRole = async () => {
+      const role = await SecureStore.getItemAsync('user_role');
+      setUserRole(role);
+    };
+    checkRole();
     fetchMasters({}, true);
   }, []);
 
@@ -139,7 +148,11 @@ export default function SearchScreen({ navigation }) {
           </View>
 
           <View style={styles.cardActions}>
-            <TouchableOpacity style={styles.moreButton} activeOpacity={0.85}>
+            <TouchableOpacity 
+              style={styles.moreButton} 
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate(ROUTES.MAJSTR_PROFILE, { masterId: item.id })}
+            >
               <Text style={styles.moreButtonText}>Več</Text>
             </TouchableOpacity>
           </View>
@@ -165,15 +178,32 @@ export default function SearchScreen({ navigation }) {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation?.goBack?.()}
+            onPress={() => navigation?.navigate(ROUTES.WELCOME)}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-back" size={30} color="#2F3241" />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Iskanje mojstra</Text>
+          <Text style={styles.title}>GLAVNI MENI</Text>
 
-          <View style={styles.rightPlaceholder} />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {userRole === 'master' && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate(ROUTES.RECEIVED_INQUIRIES)}
+                activeOpacity={0.7}
+                style={{ marginRight: 15 }}
+              >
+                <Ionicons name="mail-unread-outline" size={30} color="#2F3241" />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate(ROUTES.MY_INQUIRIES)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="briefcase-outline" size={30} color="#2F3241" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.searchBar}>

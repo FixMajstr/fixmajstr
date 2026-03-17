@@ -114,6 +114,7 @@ export const searchMasters = async ({
     console.error('Search masters failed:', error);
     throw error;
   }
+};
 export const getMajstrProfile = async (masterId) => {
   const response = await api.get(`/masters/${masterId}`);
   return response.data;

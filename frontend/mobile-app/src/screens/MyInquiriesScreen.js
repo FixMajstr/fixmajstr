@@ -18,6 +18,7 @@ const STATUS_CONFIG = {
   pending: { label: "V ČAKANJU", color: colors.textLight },
   accepted: { label: "SPREJETO", color: "#4caf50" },
   rejected: { label: "ZAVRNJENO", color: colors.error },
+  completed: { label: "ZAKLJUČENO", color: colors.primary },
 };
 
 function formatDate(iso) {
@@ -30,7 +31,7 @@ function formatDate(iso) {
   });
 }
 
-function InquiryItem({ item, expanded, onToggle }) {
+function InquiryItem({ item, expanded, onToggle, onRate }) {
   const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
   const preview = item.message
     ? item.message.length > 70
@@ -39,31 +40,44 @@ function InquiryItem({ item, expanded, onToggle }) {
     : "(brez sporočila)";
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onToggle}
-      activeOpacity={0.75}
-    >
-      {/* Row */}
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderLeft}>
-          <Text
-            style={styles.cardPreview}
-            numberOfLines={expanded ? undefined : 2}
-          >
-            {expanded ? (item.message ?? "(brez sporočila)") : preview}
-          </Text>
-          <Text style={styles.cardDate}>{formatDate(item.created_at)}</Text>
+    <View style={styles.cardContainer}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onToggle}
+        activeOpacity={0.75}
+      >
+        {/* Row */}
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Text
+              style={styles.cardPreview}
+              numberOfLines={expanded ? undefined : 2}
+            >
+              {expanded ? (item.message ?? "(brez sporočila)") : preview}
+            </Text>
+            <Text style={styles.cardDate}>{formatDate(item.created_at)}</Text>
+          </View>
+          <View style={[styles.badge, { backgroundColor: cfg.color }]}>
+            <Text style={styles.badgeText}>{cfg.label}</Text>
+          </View>
         </View>
-        <View style={[styles.badge, { backgroundColor: cfg.color }]}>
-          <Text style={styles.badgeText}>{cfg.label}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {expanded && item.status === "completed" && (
+        <TouchableOpacity
+          style={styles.ratingButton}
+          onPress={() => onRate(item)}
+        >
+          <Text style={styles.ratingButtonText}>OCENA MOJSTRA</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
-export default function MyInquiriesScreen() {
+import { ROUTES } from "../navigation/routes";
+
+export default function MyInquiriesScreen({ navigation }) {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,6 +106,10 @@ export default function MyInquiriesScreen() {
   const toggleExpand = (id) =>
     setExpandedId((prev) => (prev === id ? null : id));
 
+  const handleRate = (inquiry) => {
+    navigation.navigate(ROUTES.RATING, { inquiry });
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.wrapper} edges={["bottom"]}>
@@ -118,7 +136,7 @@ export default function MyInquiriesScreen() {
             tintColor={colors.primary}
           />
         }
-        ListHeaderComponent={<Text style={styles.heading}>MOJE POIZVEDBE</Text>}
+        ListHeaderComponent={<Text style={styles.heading}>PRETEKLA DELA</Text>}
         ListEmptyComponent={
           error ? (
             <Text style={styles.emptyError}>{error}</Text>
@@ -133,6 +151,7 @@ export default function MyInquiriesScreen() {
             item={item}
             expanded={expandedId === item.id}
             onToggle={() => toggleExpand(item.id)}
+            onRate={handleRate}
           />
         )}
       />
@@ -212,5 +231,22 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: "center",
     marginTop: 60,
+  },
+  cardContainer: {
+    marginBottom: 12,
+  },
+  ratingButton: {
+    backgroundColor: colors.primary,
+    padding: 10,
+    borderRadius: 8,
+    marginTop: -8,
+    marginBottom: 8,
+    marginHorizontal: 16,
+    alignItems: "center",
+  },
+  ratingButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 12,
   },
 });

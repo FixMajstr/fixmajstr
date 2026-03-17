@@ -11,6 +11,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
 
+import { ROUTES } from "../navigation/routes";
+
 export default function WelcomeScreen({ navigation }) {
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoY = useRef(new Animated.Value(30)).current;
@@ -154,7 +156,7 @@ export default function WelcomeScreen({ navigation }) {
             { opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
           ]}
         >
-          Poišči zanesljivega strokovnjaka{"\n"}hitro in enostavno.
+          Ali že imaš uporabniški račun?
         </Animated.Text>
       </View>
 
@@ -167,13 +169,25 @@ export default function WelcomeScreen({ navigation }) {
       >
         <TouchableOpacity
           style={[styles.button, isTablet && styles.buttonTablet]}
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => navigation.navigate(ROUTES.LOGIN)}
           activeOpacity={0.85}
         >
           <Text
             style={[styles.buttonText, isTablet && styles.buttonTextTablet]}
           >
-            Začni
+            DA
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.buttonOutline, isTablet && styles.buttonTablet, { marginTop: 16 }]}
+          onPress={() => navigation.navigate(ROUTES.REGISTER_USER)}
+          activeOpacity={0.85}
+        >
+          <Text
+            style={[styles.buttonOutlineText, isTablet && styles.buttonTextTablet]}
+          >
+            NE
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -278,5 +292,21 @@ const styles = StyleSheet.create({
   },
   buttonTextTablet: {
     fontSize: 20,
+  },
+  buttonOutline: {
+    width: "100%",
+    height: 54,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonOutlineText: {
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 17,
+    color: "#fff",
+    fontWeight: "800",
+    letterSpacing: 1,
   },
 });

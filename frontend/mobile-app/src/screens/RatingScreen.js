@@ -26,6 +26,8 @@ const MOCK_MASTER = {
   services: ['Vodovodne inštalacije', 'Ogrevanje'],
 };
 
+import { ROUTES } from '../navigation/routes';
+
 export default function RatingScreen({ navigation, route }) {
   // master is always passed from MajstrProfileScreen via navigation.navigate("RatingScreen", { master })
   const master = route.params?.master ?? MOCK_MASTER;

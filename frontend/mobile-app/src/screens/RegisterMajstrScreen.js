@@ -15,6 +15,8 @@ import { KeyboardAvoidingView, Platform } from "react-native";
 import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
 import { registerMajstr } from "../services/api";
 
+import { ROUTES } from "../navigation/routes";
+
 export default function RegisterMajstrScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -66,7 +68,14 @@ export default function RegisterMajstrScreen({ navigation }) {
       setLoading(true);
       const data = await registerMajstr(fullName, email, password);
       console.log("Registracija uspešna:", data);
-      navigation.navigate("Login");
+      if (data?.access_token && data?.user_id) {
+        await SecureStore.setItemAsync("access_token", data.access_token);
+        await SecureStore.setItemAsync("user_id", String(data.user_id));
+        await SecureStore.setItemAsync("user_role", data.role || "master");
+        navigation.navigate(ROUTES.HOME);
+      } else {
+        navigation.navigate(ROUTES.LOGIN);
+      }
     } catch (err) {
       setError("Napaka pri registraciji: " + err.message);
     } finally {
@@ -216,6 +225,22 @@ export default function RegisterMajstrScreen({ navigation }) {
                   >
                     Registriraj se
                   </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.buttonOutline, { marginTop: 16 }]}
+                  onPress={() => navigation.navigate(ROUTES.REGISTER_USER)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.buttonOutlineText}>Registracija kot Uporabnik</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.buttonOutline, { marginTop: 16 }]}
+                  onPress={() => navigation.goBack()}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.buttonOutlineText}>Nazaj</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -377,5 +402,21 @@ const styles = StyleSheet.create({
   },
   buttonTextTablet: {
     fontSize: 18,
+  },
+  buttonOutline: {
+    width: "100%",
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#497AFF",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  buttonOutlineText: {
+    color: "#497AFF",
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

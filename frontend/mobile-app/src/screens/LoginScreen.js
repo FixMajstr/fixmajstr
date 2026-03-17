@@ -16,6 +16,8 @@ import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
 import * as SecureStore from "expo-secure-store";
 import { useWindowDimensions } from "react-native";
 
+import { ROUTES } from "../navigation/routes";
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,8 +32,9 @@ export default function LoginScreen({ navigation }) {
       const data = await loginUser(email, password);
       console.log("Login uspešen:", data);
       await SecureStore.setItemAsync("access_token", data.access_token);
-      await SecureStore.setItemAsync("user_id", data.user_id);
-      navigation.navigate("Home");
+      await SecureStore.setItemAsync("user_id", String(data.user_id));
+      await SecureStore.setItemAsync("user_role", data.role || "client");
+      navigation.navigate(ROUTES.HOME);
     } catch (err) {
       setError("Napaka pri prijavi: " + err.message);
     } finally {
@@ -134,52 +137,13 @@ export default function LoginScreen({ navigation }) {
                   </Text>
                 </TouchableOpacity>
 
-                <Text
-                  style={[
-                    styles.dividerText,
-                    isTablet && styles.dividerTextTablet,
-                  ]}
+                <TouchableOpacity
+                  style={[styles.buttonOutline, { marginTop: 16 }]}
+                  onPress={() => navigation.navigate(ROUTES.WELCOME)}
+                  activeOpacity={0.85}
                 >
-                  ali se registriraj kot
-                </Text>
-
-                <View style={isTablet ? styles.rowButtons : null}>
-                  <TouchableOpacity
-                    style={[
-                      styles.buttonOutline,
-                      isTablet && styles.buttonOutlineTablet,
-                    ]}
-                    onPress={() => navigation.navigate("RegisterUser")}
-                    activeOpacity={0.85}
-                  >
-                    <Text
-                      style={[
-                        styles.buttonOutlineText,
-                        isTablet && styles.buttonTextTablet,
-                      ]}
-                    >
-                      Uporabnik
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.buttonOutline,
-                      isTablet && styles.buttonOutlineTablet,
-                    ]}
-                    onPress={() => navigation.navigate("RegisterMajstr")}
-                    activeOpacity={0.85}
-                  >
-                    <Text
-                      style={[
-                        styles.buttonOutlineText,
-                        isTablet && styles.buttonTextTablet,
-                      ]}
-                    >
-                      Mojster
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                  <Text style={styles.buttonOutlineText}>Nazaj</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>

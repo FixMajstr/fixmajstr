@@ -39,6 +39,8 @@ const MOCK_RATINGS = [
 ];
 
 
+import { ROUTES } from "../navigation/routes";
+
 export default function MajstrProfileScreen({ navigation, route }) {
   const masterId = route.params?.masterId;
   const [master, setMaster] = React.useState(route.params?.master ?? MOCK_MASTER);
@@ -91,7 +93,7 @@ export default function MajstrProfileScreen({ navigation, route }) {
   //const isMaster = true; //testing master inquiries
 
   const handleSendInquiry = () => {
-    navigation.navigate("Povprasevanje", { master });
+    navigation.navigate(ROUTES.POVPRASEVANJE, { master });
   };
 
   const renderWrenchRating = (rating) => {
@@ -219,7 +221,7 @@ export default function MajstrProfileScreen({ navigation, route }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate("RatingScreen", { master })}
+            onPress={() => navigation.navigate(ROUTES.RATING, { master })}
             activeOpacity={0.8}
           >
             <Text style={styles.secondaryButtonText}>Oceni mojstra</Text>
@@ -229,7 +231,7 @@ export default function MajstrProfileScreen({ navigation, route }) {
           {isMaster && (
             <TouchableOpacity
               style={styles.secondaryButton}
-              onPress={() => navigation.navigate("ReceivedInquiries")}
+              onPress={() => navigation.navigate(ROUTES.RECEIVED_INQUIRIES)}
               activeOpacity={0.8}
             >
               <Text style={styles.secondaryButtonText}>

@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { colors } from "../theme";
 import { fonts } from "../theme";
 
+import { ROUTES } from "../navigation/routes";
+
 export default function InquirySuccessScreen({ navigation }) {
   return (
     <View style={styles.container}>
@@ -19,10 +21,10 @@ export default function InquirySuccessScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => navigation.navigate("MyInquiries")}
+        onPress={() => navigation.navigate(ROUTES.MY_INQUIRIES)}
         activeOpacity={0.8}
       >
-        <Text style={styles.primaryButtonText}>MOJE POIZVEDBE</Text>
+        <Text style={styles.primaryButtonText}>PRETEKLA DELA</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

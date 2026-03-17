@@ -32,6 +32,8 @@ function parseApiError(err) {
   }
 }
 
+import { ROUTES } from "../navigation/routes";
+
 export default function PovprasevanjeScreen({ navigation, route }) {
   const master = route.params?.master ?? null;
 
@@ -78,7 +80,7 @@ export default function PovprasevanjeScreen({ navigation, route }) {
         master_id: master.id,
         message: trimmed,
       });
-      navigation.navigate("InquirySuccess", {
+      navigation.navigate(ROUTES.INQUIRY_SUCCESS, {
         status: result.inquiry.status,
         message: result.inquiry.message,
       });
