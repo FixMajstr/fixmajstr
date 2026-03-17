@@ -1,157 +1,357 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { loginUser } from '../services/api';
-//import AsyncStorage from '@react-native-async-storage/async-storage';
+  Image,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { loginUser } from "../services/api";
+import { KeyboardAvoidingView, Platform } from "react-native";
+import bigTextLogo from "../../assets/fixmajstr-logo-blue-white.png";
+import * as SecureStore from "expo-secure-store";
+import { useWindowDimensions } from "react-native";
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
-const handleLogin = async () => {
-  try {
-    setLoading(true);
-    const data = await loginUser(email, password);
-    //await AsyncStorage.setItem('access_token', data.access_token);
-    console.log('Login uspešen:', data);
-    //navigation.navigate('');
-  } catch (err) {
-    setError('Napaka pri prijavi: ' + err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const data = await loginUser(email, password);
+      console.log("Login uspešen:", data);
+      await SecureStore.setItemAsync("access_token", data.access_token);
+      await SecureStore.setItemAsync("user_id", data.user_id);
+      navigation.navigate("Home");
+    } catch (err) {
+      setError("Napaka pri prijavi: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>FixMajstr</Text>
+    <LinearGradient
+      colors={["#7C9FFF", "#275CED"]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 0.33 }}
+      style={styles.container}
+    >
+      <View
+        style={[styles.logoContainer, isTablet && styles.logoContainerTablet]}
+      >
+        <Image
+          source={bigTextLogo}
+          style={{
+            width: isTablet ? 520 : "100%",
+            height: isTablet ? 160 : 80,
+          }}
+          resizeMode="contain"
+        />
+        <Text style={[styles.logoText, isTablet && styles.logoTextTablet]}>
+          Mojster en klik vstran
+        </Text>
       </View>
 
-      <Text style={styles.loginTitle}>LOGIN</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1, width: "100%" }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={{ width: "100%" }}
+          contentContainerStyle={[styles.card, isTablet && styles.cardTablet]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text
+            style={[styles.loginTitle, isTablet && styles.loginTitleTablet]}
+          >
+            PRIJAVA
+          </Text>
 
-      <View style={styles.formContainer}>
-        <Text style={styles.label}>EMAIL</Text>
-        <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-        />
+          <View style={styles.formContainer}>
+            <View style={isTablet ? styles.rowFields : null}>
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Email
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
 
-        <Text style={styles.label}>PASSWORD</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={true}
-        />
+              <View style={isTablet ? { flex: 1 } : null}>
+                <Text style={[styles.label, isTablet && styles.labelTablet]}>
+                  Geslo
+                </Text>
+                <TextInput
+                  style={[styles.input, isTablet && styles.inputTablet]}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={true}
+                />
+              </View>
+            </View>
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#6b7ab5" style={{ marginTop: 20 }} />
-        ) : (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.button, styles.buttonLogin]} onPress={handleLogin}>
-              <Text style={styles.buttonText}>LOGIN</Text>
-            </TouchableOpacity>
+            {loading ? (
+              <ActivityIndicator
+                size="large"
+                color="#497AFF"
+                style={{ marginTop: 24 }}
+              />
+            ) : (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.buttonPrimary,
+                    isTablet && styles.buttonTablet,
+                  ]}
+                  onPress={handleLogin}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={[
+                      styles.buttonPrimaryText,
+                      isTablet && styles.buttonTextTablet,
+                    ]}
+                  >
+                    Prijavi se
+                  </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, styles.buttonRegisterUser]} onPress={() => navigation.navigate('RegisterUser')}>
-              <Text style={styles.buttonText}>REGISTER USER</Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.dividerText,
+                    isTablet && styles.dividerTextTablet,
+                  ]}
+                >
+                  ali se registriraj kot
+                </Text>
 
-            <TouchableOpacity style={[styles.button, styles.buttonRegisterMajstr]} onPress={() => navigation.navigate('RegisterMajstr')}>
-              <Text style={styles.buttonText}>REGISTER MAJSTR</Text>
-            </TouchableOpacity>
+                <View style={isTablet ? styles.rowButtons : null}>
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonOutline,
+                      isTablet && styles.buttonOutlineTablet,
+                    ]}
+                    onPress={() => navigation.navigate("RegisterUser")}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonOutlineText,
+                        isTablet && styles.buttonTextTablet,
+                      ]}
+                    >
+                      Uporabnik
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonOutline,
+                      isTablet && styles.buttonOutlineTablet,
+                    ]}
+                    onPress={() => navigation.navigate("RegisterMajstr")}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonOutlineText,
+                        isTablet && styles.buttonTextTablet,
+                      ]}
+                    >
+                      Mojster
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
-        )}
-      </View>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 30,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 64,
   },
   logoContainer: {
     marginBottom: 40,
+    width: "100%",
+    alignItems: "center",
+    paddingVertical: 16,
   },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '900',
-    letterSpacing: 2,
-    color: '#1a1a2e',
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
+    shadowColor: "#1a3a8f",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
+    flexGrow: 1,
   },
   loginTitle: {
-    fontSize: 14,
-    letterSpacing: 3,
-    color: '#888',
-    marginBottom: 30,
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 32,
+    letterSpacing: 1.5,
+    color: "#275CED",
+    textAlign: "center",
+    marginBottom: 28,
+    fontWeight: "800",
   },
   formContainer: {
-    width: '100%',
+    width: "100%",
   },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1,
-    color: '#333',
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 18,
+    color: "#555",
     marginBottom: 6,
+    marginLeft: 2,
   },
   input: {
-    width: '100%',
-    height: 44,
-    backgroundColor: '#e8e8e8',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    fontSize: 14,
+    width: "100%",
+    height: 46,
+    backgroundColor: "#f0f3ff",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 18,
+    fontSize: 15,
+    fontFamily: "LeagueSpartan-Regular",
+    color: "#1a1a2e",
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
   buttonContainer: {
-    marginTop: 10,
+    marginTop: 8,
     gap: 10,
+    paddingBottom: 50,
   },
-  button: {
-    width: '100%',
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonPrimary: {
+    width: "100%",
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#80A2FF",
+    elevation: 4,
   },
-  buttonLogin: {
-    backgroundColor: '#8b9fd4',
+  buttonPrimaryText: {
+    color: "#fff",
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 14,
+    fontWeight: "700",
   },
-  buttonRegisterUser: {
-    backgroundColor: '#4a5a8c',
+  dividerText: {
+    textAlign: "center",
+    fontFamily: "LeagueSpartan-Regular",
+    fontSize: 16,
+    color: "#999",
+    marginVertical: 2,
   },
-  buttonRegisterMajstr: {
-    backgroundColor: '#2d3a6b',
+  logoText: {
+    textAlign: "center",
+    fontFamily: "LeagueSpartan-Regular",
+    fontSize: 16,
+    color: "#fff",
+    marginTop: 10,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
+  buttonOutline: {
+    width: "100%",
+    height: 48,
+    borderRadius: 12,
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#497AFF",
+    elevation: 4,
+  },
+  buttonOutlineText: {
+    color: "#fff",
+    fontFamily: "LeagueSpartan-Bold",
+    fontSize: 16,
+    fontWeight: "700",
   },
   errorText: {
-    color: 'red',
+    color: "#e03c3c",
+    fontFamily: "LeagueSpartan-Regular",
     fontSize: 13,
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
+  },
+  logoContainerTablet: {
+    marginBottom: 48,
+    marginTop: 50,
+  },
+  logoTextTablet: {
+    fontSize: 20,
+  },
+  cardTablet: {
+    maxWidth: 560,
+    alignSelf: "center",
+    borderRadius: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 48,
+    flexGrow: 0,
+  },
+  loginTitleTablet: {
+    fontSize: 40,
+    marginBottom: 36,
+  },
+  rowFields: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  labelTablet: {
+    fontSize: 20,
+  },
+  inputTablet: {
+    height: 54,
+    fontSize: 17,
+    borderRadius: 12,
+  },
+  buttonTablet: {
+    height: 56,
+    borderRadius: 14,
+  },
+  rowButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  buttonOutlineTablet: {
+    flex: 1,
+    height: 56,
+    borderRadius: 14,
+  },
+  buttonTextTablet: {
+    fontSize: 18,
+  },
+  dividerTextTablet: {
+    fontSize: 18,
   },
 });
